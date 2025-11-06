@@ -148,6 +148,7 @@ body {
     transform: rotate(5deg);
 }
 
+/* Inputs */
 label {
     display: block;
     margin: 12px 0 6px;
@@ -181,7 +182,7 @@ select:focus {
     box-shadow: 0 0 0 4px rgba(90, 107, 255, 0.18);
 }
 
-/* acciones */
+/* Acciones */
 .form-inline {
     display: flex;
     align-items: center;
@@ -474,4 +475,184 @@ select:focus {
     border: 0;
     padding: 0;
     margin: -1px;
+}
+
+/* ===== Pestañas (horizontales limpias) ===== */
+.tabs.wrap {
+    max-width: 1400px;
+    margin: 12px auto 0;
+    padding: 0 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.tab-btn {
+    appearance: none;
+    border: 1px solid #cbd3ff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    background: #eef1ff;
+    color: #1b2a57;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06);
+    transition:
+        filter 0.15s ease,
+        box-shadow 0.2s ease,
+        transform 0.06s ease;
+}
+.tab-btn:hover {
+    filter: brightness(1.04);
+}
+.tab-btn:active {
+    transform: translateY(1px);
+}
+.tab-btn.active {
+    background: linear-gradient(180deg, #5a6bff, #3c50ff);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 8px 16px rgba(60, 80, 255, 0.25);
+}
+
+/* ===== Contenedor de vistas de tablas ===== */
+.wrap-narrow {
+    max-width: 1200px;
+    margin: 18px auto 46px;
+    padding: 0 16px;
+}
+.panel.paper.table-panel {
+    padding-top: 16px;
+}
+
+/* ===== Tablas coherentes ===== */
+.table-wrap {
+    overflow: auto;
+    border-radius: 14px;
+    border: 1px solid #e3e1d7;
+    background: #fff;
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+}
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.table thead th {
+    text-align: left;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #394570;
+    background: #f7f7fb;
+    border-bottom: 1px solid #e6e8f1;
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+}
+.table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0efe8;
+}
+.table tbody tr:hover {
+    background: #fafbff;
+}
+.table .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eef2ff;
+    border: 1px solid #cdd6ff;
+    font-weight: 700;
+    font-size: 12px;
+}
+.truncate {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* ===== Compactar espacio entre pestañas y tablas ===== */
+
+/* Tabs: deja un margen inferior pequeño */
+.tabs.wrap { margin-bottom: 8px; }
+
+/* El contenedor de las vistas de tablas: evita margin-collapsing y reduce top */
+.wrap-narrow {
+  /* evita que el margin-top del primer hijo colapse y genere “hueco fantasma” */
+  display: flow-root;
+  margin: 8px auto 40px;       /* antes 18px/46px */
+  padding: 0 16px;
+}
+
+/* Panel de tabla: quita cualquier margen superior no deseado */
+.wrap-narrow > .panel.paper { 
+  margin-top: 0;
+}
+
+/* Título dentro del panel: sin margen arriba para no empujar el panel */
+.panel.paper h2 { 
+  margin-top: 0;
+}
+
+/* Opcional: un pelín menos de sombra para que “pegue” ópticamente más al top */
+.panel.paper.table-panel {
+  padding-top: 14px;           /* era 16px */
+  box-shadow: 0 8px 16px rgba(15,23,42,.08);
+}
+/* ==== Ajuste de layout general ==== */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Que el contenido principal crezca, no el header */
+.header {
+  flex-shrink: 0;
+}
+
+.tabs.wrap {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px auto 6px; /* margen más compacto */
+  padding: 0 16px;
+}
+
+/* El contenedor de contenido debe ajustarse arriba, no centrarse */
+.wrap-narrow {
+  flex: 1 1 auto;
+  max-width: 1200px;
+  margin: 0 auto 40px; /* elimina el gran hueco superior */
+  padding: 0 16px;
+  display: block;
+}
+
+/* Panel “papel” con margen más pequeño */
+.panel.paper.table-panel {
+  margin-top: 8px;
+  padding-top: 14px;
+  box-shadow: 0 8px 14px rgba(15, 23, 42, 0.08);
+}
+
+/* Compactar h2 y tabla */
+.panel.paper.table-panel h2 {
+  margin: 0 0 12px;
+}
+
+/* Que el tablero se mantenga igual */
+.main {
+  align-items: flex-start;
+  margin-top: 0;
+}
+
+/* Responsive suave: centrado de tabs en móvil */
+@media (max-width: 768px) {
+  .tabs.wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+  }
 }

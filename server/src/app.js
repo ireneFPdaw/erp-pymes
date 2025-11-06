@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import tareasRouter from './routes/tareas.routes.js';
+import empleadosRouter from './routes/empleados.routes.js';
+import pacientesRouter from './routes/pacientes.routes.js';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.get('/api/health', (_req, res) => {
 
 // Rutas de tareas
 app.use('/api/tareas', tareasRouter);
+app.use('/api/empleados', empleadosRouter);
+app.use('/api/pacientes', pacientesRouter);
 
 // Middleware de 404
 app.use((_req, res) => {
@@ -44,3 +48,4 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
 });
+

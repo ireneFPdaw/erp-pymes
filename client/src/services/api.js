@@ -46,3 +46,10 @@ export function updateTarea(id, payload) {
 export function deleteTarea(id) {
   return http(`/tareas/${id}`, { method: 'DELETE' });
 }
+
+export async function getEmpleados() {
+  return http('/empleados');
+}
+export async function getPacientes() {
+  return http('/pacientes');
+}
