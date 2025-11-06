@@ -1,0 +1,484 @@
+/* ====== Reset básico accesible ====== */
+* {
+    box-sizing: border-box;
+}
+html:focus-within {
+    scroll-behavior: smooth;
+}
+body {
+    margin: 0;
+    color: #1c2440;
+    background: #f5f3ea; /* base clara compatible con el corcho */
+    font-family:
+        system-ui,
+        -apple-system,
+        Segoe UI,
+        Roboto,
+        Ubuntu,
+        Cantarell,
+        "Noto Sans",
+        sans-serif;
+    line-height: 1.35;
+}
+
+/* ====== App layout ====== */
+.app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+}
+
+.header {
+    padding: 20px 16px;
+    background: #22315c;
+    color: #fff;
+    border-bottom: 4px solid #1a2647;
+}
+.header .wrap {
+    max-width: 1400px; /* más ancho */
+    margin: 0 auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 0.3px;
+}
+.header small {
+    opacity: 0.85;
+}
+
+/* ====== Main: formulario + tablero ====== */
+.main {
+    max-width: 1400px; /* ¡expande el área total! */
+    margin: 18px auto 40px;
+    padding: 0 16px;
+    display: grid;
+    /* Columna izquierda = formulario fijo ~380px; derecha = tablero MUY amplio  */
+    grid-template-columns: 380px minmax(640px, 1fr);
+    gap: 28px;
+}
+@media (max-width: 1020px) {
+    .main {
+        grid-template-columns: 1fr;
+    }
+}
+.board-section {
+    display: grid;
+}
+
+/* ====== Panel "paper" (formulario con estética de papel) ====== */
+.panel.paper {
+    position: relative;
+    background: #fffef9;
+    color: #1c2440;
+    border-radius: 16px;
+    padding: 18px 16px;
+    border: 1px solid #e9e1c8;
+    box-shadow: 0 12px 24px rgba(25, 35, 70, 0.07);
+}
+
+/* cinta adhesiva superior */
+.panel.paper::before,
+.panel.paper::after {
+    content: "";
+    position: absolute;
+    top: -12px;
+    width: 84px;
+    height: 22px;
+    background: linear-gradient(180deg, #fff4a6, #ffe26a);
+    opacity: 0.85;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    transform: rotate(-3deg);
+    border-radius: 4px;
+}
+.panel.paper::before {
+    left: 26px;
+}
+.panel.paper::after {
+    right: 26px;
+    transform: rotate(4deg);
+}
+
+.panel.paper h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+}
+label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #24325f;
+}
+input[type="text"],
+textarea {
+    width: 100%;
+    border: 1px solid #d8d3c1;
+    background: #fffdfa;
+    color: #1c2440;
+    padding: 10px 12px;
+    border-radius: 10px;
+    outline: none;
+}
+input[type="text"]:focus,
+textarea:focus {
+    border-color: #4e6bff;
+    box-shadow: 0 0 0 3px rgba(78, 107, 255, 0.18);
+}
+textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+/* línea de acciones y switch */
+.form-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #24325f;
+}
+.switch input[type="checkbox"] {
+    accent-color: #22315c;
+    width: 18px;
+    height: 18px;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.btn {
+    appearance: none;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #c7d0ee;
+    background: #eef2ff;
+    color: #1b2a57;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn:hover {
+    filter: brightness(1.04);
+}
+.btn:focus-visible {
+    outline: 3px solid #4e6bff;
+    outline-offset: 2px;
+}
+.btn.primary {
+    background: #4e6bff;
+    border-color: #3d56d7;
+    color: #fff;
+}
+.btn.ghost {
+    background: #fff;
+}
+.btn.danger {
+    background: #ffebef;
+    border-color: #ffb7c7;
+    color: #a11930;
+}
+
+.muted {
+    color: #5a6996;
+    font-size: 14px;
+}
+.msg {
+    margin: 10px 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+}
+.msg.ok {
+    background: #e9f6ee;
+    border: 1px solid #b9e1c6;
+    color: #155c2c;
+}
+.msg.err {
+    background: #ffe9ee;
+    border: 1px solid #ffb7c7;
+    color: #7a0f23;
+}
+
+/* ====== Tablero de corcho ====== */
+.board-wrap {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2) 0 6px, transparent 7px),
+        radial-gradient(circle at 80% 60%, rgba(0, 0, 0, 0.05) 0 5px, transparent 6px), #d8c3a5; /* color corcho */
+    border: 14px solid #8b5e34; /* marco madera más robusto */
+    border-radius: 18px;
+    padding: 18px;
+    position: relative;
+    min-height: 520px;
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Grid de notas: más columnas si hay espacio */
+.board {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* notas más anchas */
+    gap: 18px;
+}
+
+/* ====== Post-its ====== */
+.note {
+    position: relative;
+    padding: 12px 12px 46px;
+    border-radius: 8px;
+    min-height: 150px;
+    background: #fff59e; /* amarillo post-it */
+    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.18);
+    transform: rotate(-0.6deg);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.note[data-color="mint"] {
+    background: #c2ffd8;
+    transform: rotate(0.4deg);
+}
+.note[data-color="pink"] {
+    background: #ffd1e6;
+    transform: rotate(-1.2deg);
+}
+
+.note:hover {
+    transform: translateY(-2px) rotate(0deg);
+    box-shadow: 0 16px 22px rgba(0, 0, 0, 0.22);
+}
+.note:focus-within {
+    outline: 3px dashed #22315c;
+    outline-offset: 3px;
+}
+
+/* chincheta */
+.note::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 18px;
+    width: 14px;
+    height: 14px;
+    background: radial-gradient(circle at 40% 40%, #b01c2a 0 7px, #66121b 8px);
+    border-radius: 50%;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* contenido */
+.note h3 {
+    margin: 6px 0 4px;
+    font-size: 16px;
+    color: #1c2440;
+}
+.note p {
+    margin: 0;
+    white-space: pre-wrap;
+    color: #2a355f;
+    font-size: 14px;
+}
+
+.note-footer {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.badge {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.15);
+}
+.controls {
+    display: flex;
+    gap: 6px;
+}
+.icon-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+}
+.icon-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+.icon-btn:focus-visible {
+    outline: 2px solid #22315c;
+    outline-offset: 1px;
+}
+
+.note.done {
+    filter: grayscale(0.08) brightness(0.96);
+}
+.note.done h3,
+.note.done p {
+    text-decoration: line-through;
+    opacity: 0.75;
+}
+
+/* utilitario para ocultar sólo visualmente (accesibilidad) */
+.visually-hidden {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+    border: 0;
+    padding: 0;
+    margin: -1px;
+}
+/* --- Kanban ---- */
+.board-wrap.kanban {
+    padding: 22px;
+}
+
+.kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columnas fijas */
+    gap: 18px;
+}
+@media (max-width: 1200px) {
+    .kanban-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 720px) {
+    .kanban-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.lane {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    min-height: 340px;
+}
+
+.lane-h {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px 8px;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+    margin-bottom: 8px;
+}
+.lane-h h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #1c2440;
+}
+.lane-h .count {
+    font-size: 12px;
+    background: #fff;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.lane-por_hacer {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+}
+.lane-en_proceso {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+}
+.lane-bloqueadas {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+}
+.lane-terminadas {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+}
+
+.lane-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+}
+/* --- FIX: Alineación perfecta del footer de la nota --- */
+.note {
+  padding: 12px 12px 48px;   /* deja altura estable para el footer */
+}
+.note-footer {
+  left: 12px;                 /* alinea con padding de .note */
+  right: 12px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;        /* 👈 centra verticalmente todo */
+  justify-content: space-between;
+  gap: 8px;
+}
+.controls {
+  display: flex;
+  align-items: center;        /* 👈 asegura alineación con el badge */
+  gap: 6px;
+}
+
+/* El select por defecto era más alto: lo compactamos */
+.status-select {
+  appearance: none;           /* quita skin del navegador */
+  border: 1px solid rgba(0,0,0,.15);
+  background: #ffffffc2;
+  border-radius: 8px;
+  padding: 6px 26px 6px 10px; /* altura y respiración similares a botones */
+  height: 30px;               /* 👈 misma altura que los botones/icon-btn */
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* chevron simple con SVG embebido */
+.status-select {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%231c2440' d='M5.5 7.5L10 12l4.5-4.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px 12px;
+}
+.status-select:focus {
+  outline: 2px solid #22315c;
+  outline-offset: 2px;
+}
+
+/* Botón/checkbox del footer: alturas consistentes */
+.icon-btn {
+  height: 30px;               /* empareja con el select */
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+}
+.badge {
+  min-width: 34px;            /* pastilla estable */
+  text-align: center;
+}
