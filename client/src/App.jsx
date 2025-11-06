@@ -43,9 +43,6 @@ export default function App() {
       <header className="header" role="banner">
         <div className="wrap">
           <h1>Tablero de tareas</h1>
-          <small aria-live="polite">
-            API: <code>{import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}</code>
-          </small>
         </div>
       </header>
 

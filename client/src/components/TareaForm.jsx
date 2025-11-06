@@ -53,7 +53,7 @@ export default function TareaForm({ tareaSeleccionada, onCancel, onSubmit }) {
         id="titulo"
         name="titulo"
         type="text"
-        placeholder="Ej. Comprar pan"
+        placeholder="Ej. Llamar a Martín Campos"
         value={form.titulo}
         onChange={handleChange}
         required
@@ -78,15 +78,6 @@ export default function TareaForm({ tareaSeleccionada, onCancel, onSubmit }) {
       </select>
 
       <div className="form-inline">
-        <label className="switch" title="Marca si ya está terminada">
-          <input
-            type="checkbox"
-            name="completada"
-            checked={form.completada}
-            onChange={handleChange}
-          />
-          <span>Completada</span>
-        </label>
 
         <div className="actions" style={{ marginLeft: 'auto' }}>
           <button className="btn primary" type="submit">
