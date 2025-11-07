@@ -570,6 +570,12 @@ select:focus {
     min-width: 90px; /* opcional, da coherencia visual */
     color: #2c3580; /* tono más legible */
 }
+
+.table td:nth-child(2),
+.table th:nth-child(2) {
+  min-width: 220px;
+  white-space: nowrap;
+}
 .truncate {
     max-width: 240px;
     white-space: nowrap;
@@ -923,19 +929,27 @@ select:focus {
     min-width: 140px;
     padding: 6px;
 }
+.menu-portal{
+  position: fixed;                 /* fuera del overflow: no se recorta */
+  z-index: 9999;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #e6e8f1;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  padding: 6px;
+}
 .menu-item {
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    padding: 8px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
 }
-.menu-item:hover {
-    background: #f6f7ff;
-}
+.menu-item:hover{ background: #f6f7ff; }
 
 .avatar.fallback {
     display: grid;
