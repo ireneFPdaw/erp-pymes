@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getEmpleados } from "../services/api.js";
 import EmpleadoModal from "./EmpleadoModal.jsx";
 import EmpleadoEditModal from "./EmpleadoEditModal.jsx";
@@ -14,6 +14,21 @@ export default function EmpleadosTable() {
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState(null);
 
+  // 🔎 filtros por columna
+  const [filters, setFilters] = useState({
+    nombre: "",
+    dni: "",
+    email: "",
+    telefono: "",
+  });
+
+  const norm = (s) =>
+    (s ?? "")
+      .toString()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""); // sin acentos
+
   async function cargar() {
     try {
       setError("");
@@ -26,6 +41,31 @@ export default function EmpleadosTable() {
   useEffect(() => {
     cargar();
   }, []);
+
+  // 🧮 aplica filtros en memoria
+  const filtered = useMemo(() => {
+    const fNombre = norm(filters.nombre);
+    const fDni = norm(filters.dni);
+    const fEmail = norm(filters.email);
+    const fTel = norm(filters.telefono);
+
+    return rows.filter((e) => {
+      const nombre = norm(`${e.apellidos}, ${e.nombres}`);
+      const dni = norm(e.dni);
+      const email = norm(e.email);
+      const tel = norm(e.telefono || "");
+
+      return (
+        (!fNombre || nombre.includes(fNombre)) &&
+        (!fDni || dni.includes(fDni)) &&
+        (!fEmail || email.includes(fEmail)) &&
+        (!fTel || tel.includes(fTel))
+      );
+    });
+  }, [rows, filters]);
+
+  const onFilter = (key) => (ev) =>
+    setFilters((f) => ({ ...f, [key]: ev.target.value }));
 
   return (
     <section
@@ -60,11 +100,55 @@ export default function EmpleadosTable() {
               <th>Alta</th>
               <th>Salario</th>
               <th>Activo</th>
-              <th style={{ width: 40 }}></th> {/* acciones */}
+              <th style={{ width: 40 }}></th>
+            </tr>
+
+            {/* 🔎 fila de filtros */}
+            <tr className="filters-row">
+              <th></th>
+              <th>
+                <input
+                  className="filter-input"
+                  placeholder="Filtrar nombre…"
+                  value={filters.nombre}
+                  onChange={onFilter("nombre")}
+                />
+              </th>
+              <th>
+                <input
+                  className="filter-input"
+                  placeholder="Filtrar DNI…"
+                  value={filters.dni}
+                  onChange={onFilter("dni")}
+                />
+              </th>
+              <th>
+                <input
+                  className="filter-input"
+                  placeholder="Filtrar email…"
+                  value={filters.email}
+                  onChange={onFilter("email")}
+                />
+              </th>
+              <th>
+                <input
+                  className="filter-input"
+                  placeholder="Filtrar teléfono…"
+                  value={filters.telefono}
+                  onChange={onFilter("telefono")}
+                />
+              </th>
+              {/* columnas sin filtro */}
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
             </tr>
           </thead>
+
           <tbody>
-            {rows.map((e) => (
+            {filtered.map((e) => (
               <tr key={e.id}>
                 <td>
                   <Avatar
@@ -103,10 +187,10 @@ export default function EmpleadosTable() {
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
                 <td colSpan="10" className="muted">
-                  Sin empleados.
+                  Sin resultados.
                 </td>
               </tr>
             )}
