@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { createEmpleado } from "../services/api.js";
+import { getEmpleado, updateEmpleado } from "../services/api.js";
 import imageCompression from "browser-image-compression";
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const init = {
   nombres: "",
@@ -14,20 +16,46 @@ const init = {
   fecha_contratacion: "",
   salario: "",
   activo: true,
-  foto_base64: "", // opcional
+  foto_base64: "", // si no se envía, no cambia
 };
 
-export default function EmpleadoModal({ open, onClose, onCreated }) {
+export default function EmpleadoEditModal({
+  open,
+  empleadoId,
+  onClose,
+  onUpdated,
+}) {
   const [form, setForm] = useState(init);
   const [err, setErr] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [fileName, setFileName] = useState("");
+
+  const [previewUrl, setPreviewUrl] = useState(""); // muestra la foto actual o la nueva
+  const [removePhoto, setRemovePhoto] = useState(false);
+
   useEffect(() => {
-    if (open) {
-      setForm(init);
+    if (open && empleadoId) {
       setErr("");
+      setRemovePhoto(false);
+      setPreviewUrl("");
+      getEmpleado(empleadoId)
+        .then((data) => {
+          setForm({
+            ...init,
+            ...data,
+            fecha_nacimiento: data.fecha_nacimiento?.slice(0, 10) || "",
+            fecha_contratacion: data.fecha_contratacion?.slice(0, 10) || "",
+            salario: data.salario ?? "",
+          });
+          if (data.tiene_foto) {
+            setPreviewUrl(
+              `${API}/api/empleados/${empleadoId}/foto?ts=${Date.now()}`
+            );
+          }
+        })
+        .catch((e) => setErr(e.message));
     }
-  }, [open]);
+  }, [open, empleadoId]);
 
   if (!open) return null;
 
@@ -40,8 +68,8 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const result = reader.result; // data:<mime>;base64,xxxx
-        const base64 = (result || "").toString().split(",")[1] || "";
+        const result = reader.result || "";
+        const base64 = result.toString().split(",")[1] || "";
         resolve(base64);
       };
       reader.onerror = reject;
@@ -53,60 +81,58 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
     const f = e.target.files?.[0];
     if (!f) return;
 
-    // 1) Rechazo rápido si es gigantesca (opcional)
-    const MAX_MB = 2;
-    const MAX_BYTES = MAX_MB * 1024 * 1024;
-
-    // 2) Opciones de compresión
     const options = {
-      maxSizeMB: 2, // intenta no superar 2 MB
-      maxWidthOrHeight: 1024, // redimensiona si es muy grande
+      maxSizeMB: 2,
+      maxWidthOrHeight: 1024,
       useWebWorker: true,
     };
-
     try {
-      // 3) Comprimir
       const compressedFile = await imageCompression(f, options);
-
-      // 4) Si aun así supera 2MB, avisamos
-      if (compressedFile.size > MAX_BYTES) {
-        setErr(
-          `La imagen sigue superando ${MAX_MB} MB. Por favor elige otra más pequeña.`
-        );
-        return;
-      }
-
-      // 5) Convertir a Base64 (sin el prefijo data:)
       const b64 = await toBase64(compressedFile);
       setForm((prev) => ({ ...prev, foto_base64: b64 }));
       setFileName(compressedFile.name || f.name);
-    } catch (err) {
-      console.error(err); // <- ya usamos la variable, ESLint contento
+      setPreviewUrl(URL.createObjectURL(compressedFile));
+      setRemovePhoto(false); // estamos reemplazando, no borrando
+    } catch {
       setErr("No se pudo comprimir o leer la imagen.");
     }
+  }
+
+  function handleRemovePhoto() {
+    setRemovePhoto(true);
+    setPreviewUrl("");
+    setForm((prev) => ({ ...prev, foto_base64: "" }));
+    setFileName("");
   }
 
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
-    if (
-      !form.nombres.trim() ||
-      !form.apellidos.trim() ||
-      !form.dni.trim() ||
-      !form.email.trim()
-    ) {
-      setErr("Completa nombres, apellidos, DNI y email.");
-      return;
+
+    const payload = { ...form };
+
+    // normalizaciones
+    const toNull = (v) => (v === "" ? null : v);
+    payload.fecha_nacimiento = toNull(payload.fecha_nacimiento);
+    payload.fecha_contratacion = toNull(payload.fecha_contratacion);
+    payload.salario = payload.salario === "" ? null : Number(payload.salario);
+
+    // foto:
+    if (removePhoto) {
+      payload.eliminar_foto = true; // backend hará foto = NULL
+      delete payload.foto_base64;
+    } else if (!payload.foto_base64) {
+      // no se tocó la foto → no incluir campo para que no cambie
+      delete payload.foto_base64;
     }
+
     try {
       setEnviando(true);
-      const payload = { ...form };
-      if (payload.salario === "") payload.salario = null;
-      await createEmpleado(payload);
-      onCreated?.(); // refresca tabla
+      await updateEmpleado(empleadoId, payload);
+      onUpdated?.();
       onClose?.();
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || "Error al guardar");
     } finally {
       setEnviando(false);
     }
@@ -122,7 +148,7 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
         onClick={(e) => e.stopPropagation()}
       >
         <header className="modal-h">
-          <h3 id="modal-title">Nuevo empleado</h3>
+          <h3 id="modal-title">Editar empleado</h3>
           <button className="icon-btn" onClick={onClose} title="Cerrar">
             ✕
           </button>
@@ -135,64 +161,65 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
         )}
 
         <form onSubmit={onSubmit} className="grid-form">
+          {/* mismos campos que el modal de crear */}
           <label>
-            Nombres*
+            {" "}
+            Nombres*{" "}
             <input
               className="control"
               name="nombres"
-              type="text"
               value={form.nombres}
               onChange={handleChange}
               autoFocus
             />
           </label>
           <label>
-            Apellidos*
+            {" "}
+            Apellidos*{" "}
             <input
               className="control"
               name="apellidos"
-              type="text"
               value={form.apellidos}
               onChange={handleChange}
             />
           </label>
           <label>
-            DNI*
+            {" "}
+            DNI*{" "}
             <input
               className="control"
               name="dni"
-              type="text"
               value={form.dni}
               onChange={handleChange}
             />
           </label>
           <label>
-            Email*
+            {" "}
+            Email*{" "}
             <input
               className="control"
               name="email"
-              type="text"
               value={form.email}
               onChange={handleChange}
             />
           </label>
           <label>
-            Teléfono
+            {" "}
+            Teléfono{" "}
             <input
               className="control"
               name="telefono"
-              type="text"
-              value={form.telefono}
+              value={form.telefono || ""}
               onChange={handleChange}
             />
           </label>
           <label>
-            Dirección
+            {" "}
+            Dirección{" "}
             <input
               className="control"
               name="direccion"
-              type="text"
-              value={form.direccion}
+              value={form.direccion || ""}
               onChange={handleChange}
             />
           </label>
@@ -210,6 +237,7 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
             </select>
           </label>
           <label>
+            {" "}
             Fecha nacimiento
             <input
               className="control"
@@ -220,6 +248,7 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
             />
           </label>
           <label>
+            {" "}
             Fecha contratación
             <input
               className="control"
@@ -230,6 +259,7 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
             />
           </label>
           <label>
+            {" "}
             Salario (€)
             <input
               className="control"
@@ -242,20 +272,55 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
           </label>
 
           <label>
-            Foto (opcional)
-            <div className="file-field">
-              <input
-                id="foto"
-                type="file"
-                accept="image/*"
-                onChange={handleFile}
-              />
-              <label htmlFor="foto" className="btn">
-                Seleccionar archivo
-              </label>
-              <span className="file-name">
-                {fileName || "Sin archivos seleccionados"}
-              </span>
+            Foto
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              {/* preview si existe */}
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Foto del empleado"
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "999px",
+                    objectFit: "cover",
+                    boxShadow: "0 0 0 1px #e6e8f1 inset",
+                  }}
+                />
+              ) : (
+                <div
+                  className="avatar fallback"
+                  style={{ width: 64, height: 64 }}
+                >
+                  👤
+                </div>
+              )}
+
+              <div className="file-field">
+                <input
+                  id="foto-edit"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFile}
+                />
+                <label htmlFor="foto-edit" className="btn">
+                  Seleccionar archivo
+                </label>
+                <span className="file-name">
+                  {fileName || (previewUrl ? "Foto actual" : "Sin archivos")}
+                </span>
+              </div>
+
+              {/* botón para quitar foto si hay actual o nueva */}
+              {(previewUrl || form.foto_base64) && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleRemovePhoto}
+                >
+                  Quitar foto
+                </button>
+              )}
             </div>
           </label>
 
@@ -264,7 +329,7 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
               Cancelar
             </button>
             <button className="btn primary" disabled={enviando}>
-              {enviando ? "Guardando…" : "Crear"}
+              {enviando ? "Guardando…" : "Guardar"}
             </button>
           </div>
         </form>

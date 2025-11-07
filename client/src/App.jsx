@@ -45,7 +45,7 @@ export default function App() {
     <div className="app">
       <header className="header" role="banner">
         <div className="wrap">
-          <h1>Tablero de tareas</h1>
+          <h1>Centro Fisioterapia Madrid</h1>
           <small aria-live="polite">
             API:{" "}
             <code>
