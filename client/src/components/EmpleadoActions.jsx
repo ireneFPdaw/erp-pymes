@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-export default function EmpleadoActions({ onEdit }) {
+export default function EmpleadoActions({ onEdit, onDocs }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef(null);
@@ -94,6 +94,15 @@ export default function EmpleadoActions({ onEdit }) {
               role="menuitem"
             >
               Editar
+            </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setOpen(false);
+                onDocs?.();
+              }}
+            >
+              Documentos
             </button>
           </div>,
           document.body

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getEmpleados } from "../services/api.js";
 import EmpleadoModal from "./EmpleadoModal.jsx";
 import EmpleadoEditModal from "./EmpleadoEditModal.jsx";
+import EmpleadoFilesModal from "./EmpleadoFilesModal.jsx"; // ✅ importa
 import Avatar from "./Avatar.jsx";
 import EmpleadoActions from "./EmpleadoActions.jsx";
 
@@ -14,7 +15,11 @@ export default function EmpleadosTable() {
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState(null);
 
-  // 🔎 filtros por columna
+  // documentos
+  const [openFiles, setOpenFiles] = useState(false);
+  const [empSel, setEmpSel] = useState(null);
+
+  // filtros
   const [filters, setFilters] = useState({
     nombre: "",
     dni: "",
@@ -27,7 +32,7 @@ export default function EmpleadosTable() {
       .toString()
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, ""); // sin acentos
+      .replace(/[\u0300-\u036f]/g, "");
 
   async function cargar() {
     try {
@@ -42,7 +47,6 @@ export default function EmpleadosTable() {
     cargar();
   }, []);
 
-  // 🧮 aplica filtros en memoria
   const filtered = useMemo(() => {
     const fNombre = norm(filters.nombre);
     const fDni = norm(filters.dni);
@@ -54,7 +58,6 @@ export default function EmpleadosTable() {
       const dni = norm(e.dni);
       const email = norm(e.email);
       const tel = norm(e.telefono || "");
-
       return (
         (!fNombre || nombre.includes(fNombre)) &&
         (!fDni || dni.includes(fDni)) &&
@@ -102,8 +105,6 @@ export default function EmpleadosTable() {
               <th>Activo</th>
               <th style={{ width: 40 }}></th>
             </tr>
-
-            {/* 🔎 fila de filtros */}
             <tr className="filters-row">
               <th></th>
               <th>
@@ -138,7 +139,6 @@ export default function EmpleadosTable() {
                   onChange={onFilter("telefono")}
                 />
               </th>
-              {/* columnas sin filtro */}
               <th></th>
               <th></th>
               <th></th>
@@ -158,7 +158,6 @@ export default function EmpleadosTable() {
                     visible={e.tiene_foto}
                   />
                 </td>
-
                 <td>
                   {e.apellidos}, {e.nombres}
                 </td>
@@ -183,6 +182,10 @@ export default function EmpleadosTable() {
                       setEditId(e.id);
                       setOpenEdit(true);
                     }}
+                    onDocs={() => {
+                      setEmpSel(e);
+                      setOpenFiles(true);
+                    }} // ✅ abrir documentos
                   />
                 </td>
               </tr>
@@ -206,6 +209,13 @@ export default function EmpleadosTable() {
           setOpenCreate(false);
           cargar();
         }}
+      />
+
+      {/* Documentos */}
+      <EmpleadoFilesModal
+        open={openFiles}
+        empleado={empSel}
+        onClose={() => setOpenFiles(false)}
       />
 
       {/* Editar */}
