@@ -46,12 +46,7 @@ export default function App() {
       <header className="header" role="banner">
         <div className="wrap">
           <h1>Centro Fisioterapia Madrid</h1>
-          <small aria-live="polite">
-            API:{" "}
-            <code>
-              {import.meta.env.VITE_API_URL || "http://localhost:4000/api"}
-            </code>
-          </small>
+         
         </div>
       </header>
 
@@ -117,7 +112,7 @@ export default function App() {
         <main
           className="wrap-narrow"
           style={{
-            maxWidth: "1200px",
+            maxWidth: "2200px",
             margin: "22px auto 46px",
             padding: "0 16px",
           }}
