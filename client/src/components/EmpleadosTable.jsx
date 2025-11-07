@@ -51,8 +51,7 @@ export default function EmpleadosTable() {
         <table className="table">
           <thead>
             <tr>
-              <th style={{ width: 56 }}>Foto</th>
-              <th>#</th>
+              <th style={{ width: 56 }}>AVATAR</th>
               <th>Nombre</th>
               <th>DNI</th>
               <th>Email</th>
@@ -75,7 +74,7 @@ export default function EmpleadosTable() {
                     visible={e.tiene_foto}
                   />
                 </td>
-                <td>#{e.id}</td>
+
                 <td>
                   {e.apellidos}, {e.nombres}
                 </td>
@@ -92,7 +91,7 @@ export default function EmpleadosTable() {
                     ? new Date(e.fecha_contratacion).toLocaleDateString()
                     : "—"}
                 </td>
-                  <td>{e.salario}€</td>
+                <td>{e.salario}€</td>
                 <td>{e.activo ? "Sí" : "No"}</td>
                 <td style={{ textAlign: "right" }}>
                   <EmpleadoActions
