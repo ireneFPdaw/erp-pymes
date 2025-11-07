@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Edit3, Folder } from "lucide-react";
 
 export default function EmpleadoActions({ onEdit, onDocs }) {
   const [open, setOpen] = useState(false);
@@ -82,7 +83,6 @@ export default function EmpleadoActions({ onEdit, onDocs }) {
             className="menu-portal"
             role="menu"
             style={{ top: pos.top, left: pos.left }}
-            // por si acaso, evitamos que este contenedor burbujee al document
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -92,17 +92,21 @@ export default function EmpleadoActions({ onEdit, onDocs }) {
                 onEdit?.();
               }}
               role="menuitem"
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
-              Editar
+              <Edit3 size={16} strokeWidth={2} /> Editar
             </button>
+
             <button
               className="menu-item"
               onClick={() => {
                 setOpen(false);
                 onDocs?.();
               }}
+              role="menuitem"
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
-              Documentos
+              <Folder size={16} strokeWidth={2} /> Documentos
             </button>
           </div>,
           document.body

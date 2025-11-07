@@ -947,7 +947,13 @@ select:focus {
     padding: 8px 10px;
     border-radius: 8px;
     cursor: pointer;
+     gap: 8px;
     font-size: 14px;
+    display: flex;
+}
+.menu-item svg {
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 .menu-item:hover {
     background: #f6f7ff;
