@@ -1,9 +1,8 @@
-import { Router } from 'express';
-import { listarPacientes } from '../controllers/pacientes.controller.js';
-
+import { Router } from "express";
+import { listarPacientes, crearPaciente } from "../controllers/pacientes.controller.js";
 const router = Router();
 
-// GET /api/pacientes
-router.get('/', listarPacientes);
+router.get("/", listarPacientes);
+router.post("/", crearPaciente);
 
 export default router;

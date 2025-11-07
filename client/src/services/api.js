@@ -100,3 +100,37 @@ export async function deleteEmpleadoArchivo(id, fileId) {
 export function urlVerEmpleadoArchivo(id, fileId) {
   return `${API}/api/empleados/${id}/archivos/${fileId}`;
 }
+
+export async function createPaciente(data) {
+  return http("/pacientes", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function getPaciente(id) {
+  return http(`/pacientes/${id}`, { method: "GET" });
+}
+
+// Archivos de PACIENTES
+export async function getPacienteArchivos(id) {
+  const r = await fetch(`${API}/api/pacientes/${id}/archivos`);
+  if (!r.ok) throw new Error("No se pudieron cargar los archivos");
+  return r.json();
+}
+export async function uploadPacienteArchivo(id, file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const r = await fetch(`${API}/api/pacientes/${id}/archivos`, {
+    method: "POST",
+    body: fd,
+  });
+  if (!r.ok) throw new Error("No se pudo subir el archivo");
+  return r.json();
+}
+export async function deletePacienteArchivo(id, fileId) {
+  const r = await fetch(`${API}/api/pacientes/${id}/archivos/${fileId}`, {
+    method: "DELETE",
+  });
+  if (!r.ok) throw new Error("No se pudo eliminar el archivo");
+}
+export function urlVerPacienteArchivo(id, fileId) {
+  return `${API}/api/pacientes/${id}/archivos/${fileId}`;
+}

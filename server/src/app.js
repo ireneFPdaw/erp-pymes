@@ -1,32 +1,41 @@
+// server/src/app.js
 import "dotenv/config.js";
 import express from "express";
 import cors from "cors";
 
 import tareasRouter from "./routes/tareas.routes.js";
 import empleadosRouter from "./routes/empleados.routes.js";
-import pacientesRouter from "./routes/pacientes.routes.js";
-import archivosRoutes from "./routes/archivos.routes.js";
+import archivosEmpleadosRoutes from "./routes/archivos.routes.js"; // ← archivos empleados
+
+import pacientesRouter from "./routes/pacientes.routes.js"; // ← SOLO una vez
+import archivosPacientesRoutes from "./routes/archivos.pacientes.routes.js"; // ← importa archivos pacientes
 
 const app = express();
 const ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
 
-app.use(cors({
-  origin: ORIGIN,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
+// ---- Rutas de dominio
 app.use("/api/tareas", tareasRouter);
-app.use("/api/empleados", empleadosRouter);
-app.use("/api/pacientes", pacientesRouter);
 
-// ✅ rutas de archivos (antes del 404 y con slash)
-app.use("/api/empleados", archivosRoutes);
+// Empleados
+app.use("/api/empleados", empleadosRouter);
+app.use("/api/empleados", archivosEmpleadosRoutes); // endpoints de archivos de empleados
+
+// Pacientes
+app.use("/api/pacientes", pacientesRouter);
+app.use("/api/pacientes", archivosPacientesRoutes); // endpoints de archivos de pacientes
 
 // 404 al final
 app.use((req, res) => res.status(404).json({ error: "Recurso no encontrado" }));
@@ -34,7 +43,9 @@ app.use((req, res) => res.status(404).json({ error: "Recurso no encontrado" }));
 // Manejador de errores al final-del-final
 app.use((err, _req, res, _next) => {
   if (err?.type === "entity.too.large") {
-    return res.status(413).json({ error: "La imagen o el cuerpo supera el límite (máx. 10 MB)." });
+    return res
+      .status(413)
+      .json({ error: "La imagen o el cuerpo supera el límite (máx. 10 MB)." });
   }
   console.error(err);
   res.status(500).json({ error: "Error interno" });
