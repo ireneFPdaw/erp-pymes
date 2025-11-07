@@ -1158,3 +1158,7 @@ select:focus {
 }
 .table td .btn + .btn{ margin-left:10px; }
 .table thead th[role="button"] { cursor: pointer; user-select: none; }
+.table thead th[aria-sort="ascending"],
+.table thead th[aria-sort="descending"] {
+  background: #f2f4ff;          /* suave */
+}

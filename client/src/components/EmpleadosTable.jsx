@@ -6,36 +6,38 @@ import EmpleadoEditModal from "./EmpleadoEditModal.jsx";
 import EmpleadoFilesModal from "./EmpleadoFilesModal.jsx";
 import Avatar from "./Avatar.jsx";
 import EmpleadoActions from "./EmpleadoActions.jsx";
-import { ArrowUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-/** Cabecera de tabla ordenable con indicador ↑/↓ */
 function SortableTH({ label, colKey, sort, onSort, style }) {
   const active = sort.key === colKey;
-  const dir = active ? sort.dir : null; // "asc" | "desc" | null
+  const dir = active ? sort.dir : null;
+  let Icon = ChevronsUpDown; // por defecto
+
+  if (active && dir === "asc") Icon = ChevronUp;
+  if (active && dir === "desc") Icon = ChevronDown;
+
   return (
     <th
       role="button"
+      aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
       onClick={() => onSort(colKey)}
       title={`Ordenar por ${label}`}
-      style={{ userSelect: "none", cursor: "pointer", ...style }}
+      style={{
+        userSelect: "none",
+        cursor: "pointer",
+        ...style,
+      }}
     >
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          fontWeight: 600,
+        }}
+      >
         {label}
-        {active ? (
-          <span
-            aria-hidden
-            style={{
-              fontSize: 12,
-              opacity: 0.9,
-              lineHeight: 1,
-              marginLeft: 2,
-            }}
-          >
-            {dir === "asc" ? "▲" : "▼"}
-          </span>
-        ) : (
-          <ArrowUpDown size={14} style={{ opacity: 0.55 }} />
-        )}
+        <Icon size={14} strokeWidth={2} style={{ opacity: 0.65 }} />
       </span>
     </th>
   );
