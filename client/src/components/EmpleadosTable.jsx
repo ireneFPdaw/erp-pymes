@@ -1,25 +1,58 @@
+// src/components/EmpleadosTable.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getEmpleados } from "../services/api.js";
 import EmpleadoModal from "./EmpleadoModal.jsx";
 import EmpleadoEditModal from "./EmpleadoEditModal.jsx";
-import EmpleadoFilesModal from "./EmpleadoFilesModal.jsx"; // ✅ importa
+import EmpleadoFilesModal from "./EmpleadoFilesModal.jsx";
 import Avatar from "./Avatar.jsx";
 import EmpleadoActions from "./EmpleadoActions.jsx";
+import { ArrowUpDown } from "lucide-react";
+
+/** Cabecera de tabla ordenable con indicador ↑/↓ */
+function SortableTH({ label, colKey, sort, onSort, style }) {
+  const active = sort.key === colKey;
+  const dir = active ? sort.dir : null; // "asc" | "desc" | null
+  return (
+    <th
+      role="button"
+      onClick={() => onSort(colKey)}
+      title={`Ordenar por ${label}`}
+      style={{ userSelect: "none", cursor: "pointer", ...style }}
+    >
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        {label}
+        {active ? (
+          <span
+            aria-hidden
+            style={{
+              fontSize: 12,
+              opacity: 0.9,
+              lineHeight: 1,
+              marginLeft: 2,
+            }}
+          >
+            {dir === "asc" ? "▲" : "▼"}
+          </span>
+        ) : (
+          <ArrowUpDown size={14} style={{ opacity: 0.55 }} />
+        )}
+      </span>
+    </th>
+  );
+}
 
 export default function EmpleadosTable() {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
-  const [openCreate, setOpenCreate] = useState(false);
 
-  // edición
+  // modales
+  const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-
-  // documentos
   const [openFiles, setOpenFiles] = useState(false);
   const [empSel, setEmpSel] = useState(null);
 
-  // filtros
+  // filtros por columna
   const [filters, setFilters] = useState({
     nombre: "",
     dni: "",
@@ -27,12 +60,22 @@ export default function EmpleadosTable() {
     telefono: "",
   });
 
+  // 🔍 búsqueda global + filtro Activo
+  const [q, setQ] = useState(""); // global
+  const [activo, setActivo] = useState("todos"); // 'todos' | 'si' | 'no'
+
+  // 📊 sort & paginación
+  const [sort, setSort] = useState({ key: "apellidos", dir: "asc" });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const norm = (s) =>
     (s ?? "")
       .toString()
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
+  const limpiarTel = (t) => (t || "").replace(/[^\d]/g, "");
 
   async function cargar() {
     try {
@@ -47,28 +90,79 @@ export default function EmpleadosTable() {
     cargar();
   }, []);
 
-  const filtered = useMemo(() => {
+  // comparador genérico
+  const cmp = (a, b, key) => {
+    const va = a?.[key],
+      vb = b?.[key];
+    if (va == null && vb == null) return 0;
+    if (va == null) return -1;
+    if (vb == null) return 1;
+    // fechas/números/strings
+    const na = typeof va === "number" ? va : isNaN(+va) ? null : +va;
+    const nb = typeof vb === "number" ? vb : isNaN(+vb) ? null : +vb;
+    if (na != null && nb != null) return na - nb;
+    return norm(String(va)).localeCompare(norm(String(vb)));
+  };
+
+  const sortedPaged = useMemo(() => {
+    let data = rows;
+
+    // filtros por columna
     const fNombre = norm(filters.nombre);
     const fDni = norm(filters.dni);
     const fEmail = norm(filters.email);
     const fTel = norm(filters.telefono);
 
-    return rows.filter((e) => {
+    data = data.filter((e) => {
       const nombre = norm(`${e.apellidos}, ${e.nombres}`);
       const dni = norm(e.dni);
       const email = norm(e.email);
       const tel = norm(e.telefono || "");
-      return (
+      const pasaCols =
         (!fNombre || nombre.includes(fNombre)) &&
         (!fDni || dni.includes(fDni)) &&
         (!fEmail || email.includes(fEmail)) &&
-        (!fTel || tel.includes(fTel))
+        (!fTel || tel.includes(fTel));
+
+      // 🔍 global
+      const g = norm(q);
+      const texto = norm(
+        `${e.apellidos}, ${e.nombres} ${e.dni} ${e.email} ${e.telefono || ""} ${
+          e.rol || ""
+        }`
       );
+      const pasaGlobal = !g || texto.includes(g);
+
+      // filtro activo
+      const pasaActivo =
+        activo === "todos" ? true : activo === "si" ? e.activo : !e.activo;
+
+      return pasaCols && pasaGlobal && pasaActivo;
     });
-  }, [rows, filters]);
+
+    // sort
+    data = [...data].sort((a, b) =>
+      sort.dir === "asc" ? cmp(a, b, sort.key) : -cmp(a, b, sort.key)
+    );
+
+    // paginación
+    const total = data.length;
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(page, maxPage);
+    const slice = data.slice((p - 1) * pageSize, p * pageSize);
+
+    return { data: slice, total, maxPage, page: p };
+  }, [rows, filters, q, activo, sort, page, pageSize]);
 
   const onFilter = (key) => (ev) =>
     setFilters((f) => ({ ...f, [key]: ev.target.value }));
+  const setSortCol = (key) => {
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" }
+    );
+  };
 
   return (
     <section
@@ -80,12 +174,43 @@ export default function EmpleadosTable() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: 12,
         }}
       >
         <h2 id="empleados-title">Empleados</h2>
-        <button className="btn primary" onClick={() => setOpenCreate(true)}>
-          + Nuevo empleado
-        </button>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* 🔍 búsqueda global */}
+          <input
+            className="filter-input"
+            placeholder="Buscar en todos los campos…"
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1);
+            }}
+            style={{ width: 260 }}
+          />
+
+          {/* Filtro Activo */}
+          <select
+            className="filter-input"
+            value={activo}
+            onChange={(e) => {
+              setActivo(e.target.value);
+              setPage(1);
+            }}
+            style={{ width: 140 }}
+          >
+            <option value="todos">Todos</option>
+            <option value="si">Activos</option>
+            <option value="no">Inactivos</option>
+          </select>
+
+          <button className="btn primary" onClick={() => setOpenCreate(true)}>
+            + Nuevo empleado
+          </button>
+        </div>
       </header>
 
       {error && <p className="msg err">{error}</p>}
@@ -95,16 +220,51 @@ export default function EmpleadosTable() {
           <thead>
             <tr>
               <th style={{ width: 56 }}>AVATAR</th>
-              <th>Nombre</th>
-              <th>DNI</th>
+
+              <SortableTH
+                label="Nombre"
+                colKey="apellidos"
+                sort={sort}
+                onSort={setSortCol}
+              />
+
+              <SortableTH
+                label="DNI"
+                colKey="dni"
+                sort={sort}
+                onSort={setSortCol}
+              />
+
               <th>Email</th>
-              <th>Teléfono</th>
+
+              <SortableTH
+                label="Teléfono"
+                colKey="telefono"
+                sort={sort}
+                onSort={setSortCol}
+              />
+
               <th>Rol</th>
-              <th>Alta</th>
-              <th>Salario</th>
+
+              <SortableTH
+                label="Alta"
+                colKey="fecha_contratacion"
+                sort={sort}
+                onSort={setSortCol}
+              />
+
+              <SortableTH
+                label="Salario"
+                colKey="salario"
+                sort={sort}
+                onSort={setSortCol}
+              />
+
               <th>Activo</th>
               <th style={{ width: 40 }}></th>
             </tr>
+
+            {/* filtros por columna */}
             <tr className="filters-row">
               <th></th>
               <th>
@@ -148,7 +308,7 @@ export default function EmpleadosTable() {
           </thead>
 
           <tbody>
-            {filtered.map((e) => (
+            {sortedPaged.data.map((e) => (
               <tr key={e.id}>
                 <td>
                   <Avatar
@@ -158,24 +318,52 @@ export default function EmpleadosTable() {
                     visible={e.tiene_foto}
                   />
                 </td>
+
                 <td>
                   {e.apellidos}, {e.nombres}
                 </td>
                 <td>{e.dni}</td>
-                <td className="truncate">{e.email}</td>
-                <td>{e.telefono || "—"}</td>
+
+                {/* 📞 contacto rápido */}
+                <td className="truncate">
+                  <a href={`mailto:${e.email}`}>{e.email}</a>
+                </td>
+                <td>
+                  {e.telefono ? (
+                    <>
+                      <a href={`tel:${limpiarTel(e.telefono)}`} title="Llamar">
+                        {e.telefono}
+                      </a>{" "}
+                      ·{" "}
+                      <a
+                        href={`https://wa.me/${limpiarTel(e.telefono)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="WhatsApp"
+                      >
+                        WhatsApp
+                      </a>
+                    </>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+
                 <td className="rol">
                   <span className="tag" data-rol={(e.rol || "").toLowerCase()}>
                     {e.rol}
                   </span>
                 </td>
+
                 <td>
                   {e.fecha_contratacion
                     ? new Date(e.fecha_contratacion).toLocaleDateString()
                     : "—"}
                 </td>
+
                 <td>{e.salario}€</td>
                 <td>{e.activo ? "Sí" : "No"}</td>
+
                 <td style={{ textAlign: "right" }}>
                   <EmpleadoActions
                     onEdit={() => {
@@ -185,12 +373,13 @@ export default function EmpleadosTable() {
                     onDocs={() => {
                       setEmpSel(e);
                       setOpenFiles(true);
-                    }} // ← importante
+                    }}
                   />
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+
+            {sortedPaged.data.length === 0 && (
               <tr>
                 <td colSpan="10" className="muted">
                   Sin resultados.
@@ -201,7 +390,53 @@ export default function EmpleadosTable() {
         </table>
       </div>
 
-      {/* Crear */}
+      {/* 📄 paginación */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: 10,
+        }}
+      >
+        <div className="muted">Total: {sortedPaged.total}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(+e.target.value);
+              setPage(1);
+            }}
+            className="filter-input"
+            style={{ width: 93 }}
+          >
+            {[5, 10, 20, 50].map((n) => (
+              <option key={n} value={n}>
+                {n}/pág.
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={sortedPaged.page <= 1}
+          >
+            ‹ Anterior
+          </button>
+          <span className="muted">
+            Pag. {sortedPaged.page} / {sortedPaged.maxPage}
+          </span>
+          <button
+            className="btn"
+            onClick={() => setPage((p) => Math.min(sortedPaged.maxPage, p + 1))}
+            disabled={sortedPaged.page >= sortedPaged.maxPage}
+          >
+            Siguiente ›
+          </button>
+        </div>
+      </div>
+
+      {/* Modales */}
       <EmpleadoModal
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -210,15 +445,11 @@ export default function EmpleadosTable() {
           cargar();
         }}
       />
-
-      {/* Documentos */}
       <EmpleadoFilesModal
         open={openFiles}
         empleado={empSel}
         onClose={() => setOpenFiles(false)}
       />
-
-      {/* Editar */}
       <EmpleadoEditModal
         open={openEdit}
         empleadoId={editId}

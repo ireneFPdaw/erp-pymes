@@ -567,7 +567,7 @@ select:focus {
     font-weight: 700;
     font-size: 12px;
     text-align: center;
-    min-width: 90px; /* opcional, da coherencia visual */
+    min-width: 100px; /* opcional, da coherencia visual */
     color: #2c3580; /* tono más legible */
 }
 
@@ -1151,3 +1151,4 @@ select:focus {
   border-radius:12px;
 }
 .table td .btn + .btn{ margin-left:10px; }
+.table thead th[role="button"] { cursor: pointer; user-select: none; }

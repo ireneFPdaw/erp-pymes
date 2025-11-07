@@ -1,18 +1,31 @@
 import React, { useEffect, useState } from "react";
 import {
   getEmpleadoArchivos,
-  uploadEmpleadoArchivo,
   deleteEmpleadoArchivo,
   urlVerEmpleadoArchivo,
 } from "../services/api.js";
+
+// helper icono por mime
+const kindIcon = (mime) => {
+  if (!mime) return "📄";
+  if (mime.startsWith("image/")) return "🖼️";
+  if (mime === "application/pdf") return "📄";
+  if (mime.includes("zip")) return "📦";
+  if (mime.includes("word") || mime.includes("msword")) return "📝";
+  if (mime.includes("sheet") || mime.includes("excel")) return "📊";
+  return "📄";
+};
 
 export default function EmpleadoFilesModal({ open, empleado, onClose }) {
   const [docs, setDocs] = useState([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState({ open: false, id: null });
+  // progreso de subida
+  const [progress, setProgress] = useState(0);
 
-  // estado para el popup de confirmación
-  const [confirm, setConfirm] = useState({ open: false, id: null, nombre: "" });
+  // rename dialog
+  const [rename, setRename] = useState({ open: false, id: null, nombre: "" });
 
   useEffect(() => {
     if (!open || !empleado?.id) return;
@@ -26,40 +39,109 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
 
   if (!open) return null;
 
-  async function onUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setErr("");
-      setBusy(true);
-      await uploadEmpleadoArchivo(empleado.id, file);
-      const fresh = await getEmpleadoArchivos(empleado.id);
-      setDocs(fresh);
-    } catch (e) {
-      setErr(e.message || "No se pudo subir el archivo");
-    } finally {
-      setBusy(false);
-      e.target.value = "";
-    }
+  async function refetch() {
+    const fresh = await getEmpleadoArchivos(empleado.id);
+    setDocs(fresh);
   }
 
-  function askDelete(file) {
-    setConfirm({ open: true, id: file.id, nombre: file.nombre });
+  // XHR para progreso real
+  function onUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setErr("");
+    setBusy(true);
+    setProgress(0);
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open(
+      "POST",
+      `${
+        import.meta.env.VITE_API_URL || "http://localhost:4000"
+      }/api/empleados/${empleado.id}/archivos`,
+      true
+    );
+
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable) {
+        setProgress(Math.round((ev.loaded / ev.total) * 100));
+      }
+    };
+
+    xhr.onload = async () => {
+      setBusy(false);
+      setProgress(0);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        await refetch();
+      } else {
+        try {
+          const { error } = JSON.parse(xhr.responseText || "{}");
+          setErr(error || "No se pudo subir el archivo");
+        } catch {
+          setErr("No se pudo subir el archivo");
+        }
+      }
+      e.target.value = "";
+    };
+
+    xhr.onerror = () => {
+      setBusy(false);
+      setProgress(0);
+      setErr("Error de red al subir");
+      e.target.value = "";
+    };
+
+    xhr.send(fd);
+  }
+
+  async function onDelete(fileId) {
+    setConfirm({ open: true, id: fileId });
   }
 
   async function doDelete() {
-    const fileId = confirm.id;
-    if (!fileId) return;
+    if (!confirm.id) return;
     try {
       setErr("");
       setBusy(true);
-      await deleteEmpleadoArchivo(empleado.id, fileId);
-      setDocs((d) => d.filter((x) => x.id !== fileId));
+      await deleteEmpleadoArchivo(empleado.id, confirm.id);
+      setDocs((d) => d.filter((x) => x.id !== confirm.id));
     } catch (e) {
       setErr(e.message || "No se pudo eliminar");
     } finally {
       setBusy(false);
-      setConfirm({ open: false, id: null, nombre: "" });
+      setConfirm({ open: false, id: null });
+    }
+  }
+
+  function askRename(file) {
+    setRename({ open: true, id: file.id, nombre: file.nombre || "" });
+  }
+  async function doRename() {
+    try {
+      setBusy(true);
+      const res = await fetch(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:4000"
+        }/api/empleados/${empleado.id}/archivos/${rename.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre: rename.nombre }),
+        }
+      );
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || "No se pudo renombrar");
+      }
+      await refetch();
+      setRename({ open: false, id: null, nombre: "" });
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -78,7 +160,7 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
         {err && <p className="msg err">{err}</p>}
 
         <label className="btn">
-          Subir archivo ...
+          Subir archivo …
           <input
             type="file"
             style={{ display: "none" }}
@@ -87,10 +169,33 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
           />
         </label>
 
+        {/* barra de progreso */}
+        {progress > 0 && (
+          <div
+            style={{
+              margin: "10px 0",
+              height: 8,
+              background: "#eef1ff",
+              borderRadius: 8,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: "#5a6bff",
+                transition: "width .2s",
+              }}
+            />
+          </div>
+        )}
+
         <div className="table-wrap" style={{ marginTop: 12 }}>
           <table className="table">
             <thead>
               <tr>
+                <th></th>
                 <th>Nombre</th>
                 <th>Tamaño</th>
                 <th>Tipo</th>
@@ -99,34 +204,70 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
               </tr>
             </thead>
             <tbody>
-              {docs.map((d) => (
-                <tr key={d.id}>
-                  <td className="truncate">{d.nombre}</td>
-                  <td>{(d.bytes / 1024).toFixed(1)} KB</td>
-                  <td>{d.mime}</td>
-                  <td>{new Date(d.created_at).toLocaleString()}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <a
-                      className="btn btn-ver"
-                      href={urlVerEmpleadoArchivo(empleado.id, d.id)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ver
-                    </a>
-                    <button
-                      className="btn btn-borrar"
-                      onClick={() => askDelete(d)}
-                      disabled={busy}
-                    >
-                      Borrar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {docs.map((d) => {
+                const isImg = (d.mime || "").startsWith("image/");
+                const verUrl = urlVerEmpleadoArchivo(empleado.id, d.id);
+                return (
+                  <tr key={d.id}>
+                    <td style={{ width: 48, textAlign: "center" }}>
+                      {isImg ? (
+                        <img
+                          src={verUrl}
+                          alt=""
+                          style={{
+                            width: 36,
+                            height: 36,
+                            objectFit: "cover",
+                            borderRadius: 6,
+                            boxShadow: "0 0 0 1px #eee",
+                          }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: 18 }}>{kindIcon(d.mime)}</span>
+                      )}
+                    </td>
+                    <td className="truncate">{d.nombre}</td>
+                    <td>{(d.bytes / 1024).toFixed(1)} KB</td>
+                    <td>{d.mime}</td>
+                    <td>
+                      {new Date(d.created_at).toLocaleString()}
+                      {d.subido_por ? (
+                        <span className="muted"> · por {d.subido_por}</span>
+                      ) : null}
+                    </td>
+                    <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                      <a
+                        className="btn btn-ver"
+                        href={verUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ver
+                      </a>
+                      <a className="btn" href={verUrl} download>
+                        Descargar
+                      </a>
+                      <button
+                        className="btn"
+                        onClick={() => askRename(d)}
+                        disabled={busy}
+                      >
+                        Renombrar
+                      </button>
+                      <button
+                        className="btn btn-borrar"
+                        onClick={() => onDelete(d.id)}
+                        disabled={busy}
+                      >
+                        Borrar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {docs.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="muted">
+                  <td colSpan="6" className="muted">
                     Sin documentos.
                   </td>
                 </tr>
@@ -135,23 +276,19 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
           </table>
         </div>
 
-        {/* Popup de confirmación */}
+        {/* confirm borrar */}
         {confirm.open && (
           <div
             className="confirm-backdrop"
-            onClick={() => setConfirm({ open: false, id: null, nombre: "" })}
+            onClick={() => setConfirm({ open: false, id: null })}
           >
             <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
               <h4>Eliminar archivo</h4>
-              <p>
-                ¿Seguro que deseas eliminar <strong>{confirm.nombre}</strong>?
-              </p>
+              <p>¿Seguro que deseas eliminar este archivo?</p>
               <div className="confirm-actions">
                 <button
                   className="btn"
-                  onClick={() =>
-                    setConfirm({ open: false, id: null, nombre: "" })
-                  }
+                  onClick={() => setConfirm({ open: false, id: null })}
                 >
                   Cancelar
                 </button>
@@ -161,6 +298,44 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
                   disabled={busy}
                 >
                   Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* renombrar */}
+        {rename.open && (
+          <div
+            className="confirm-backdrop"
+            onClick={() => setRename({ open: false, id: null, nombre: "" })}
+          >
+            <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+              <h4>Renombrar archivo</h4>
+              <input
+                className="filter-input"
+                value={rename.nombre}
+                onChange={(e) =>
+                  setRename((r) => ({ ...r, nombre: e.target.value }))
+                }
+                placeholder="Nuevo nombre…"
+                style={{ width: "100%", margin: "8px 0" }}
+              />
+              <div className="confirm-actions">
+                <button
+                  className="btn"
+                  onClick={() =>
+                    setRename({ open: false, id: null, nombre: "" })
+                  }
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn primary"
+                  onClick={doRename}
+                  disabled={busy || !rename.nombre.trim()}
+                >
+                  Guardar
                 </button>
               </div>
             </div>
