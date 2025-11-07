@@ -53,3 +53,7 @@ export async function getEmpleados() {
 export async function getPacientes() {
   return http('/pacientes');
 }
+
+export async function createEmpleado(data) {
+  return http('/empleados', { method: 'POST', body: JSON.stringify(data) });
+}

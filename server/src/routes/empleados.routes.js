@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { listarEmpleados } from '../controllers/empleados.controller.js';
+import { listarEmpleados, crearEmpleado } from '../controllers/empleados.controller.js';
 
 const router = Router();
 
-// GET /api/empleados
 router.get('/', listarEmpleados);
+router.post('/', crearEmpleado);
 
 export default router;

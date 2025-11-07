@@ -1,24 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { getEmpleados } from "../services/api.js";
+import React, { useEffect, useState } from 'react';
+import { getEmpleados } from '../services/api.js';
+import EmpleadoModal from './EmpleadoModal.jsx';
 
 export default function EmpleadosTable() {
   const [rows, setRows] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        setRows(await getEmpleados());
-      } catch (e) {
-        setError(e.message);
-      }
-    })();
-  }, []);
+  async function cargar() {
+    try {
+      setError('');
+      const data = await getEmpleados();
+      setRows(data);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  useEffect(() => { cargar(); }, []);
 
   return (
     <section className="panel paper table-panel" aria-labelledby="empleados-title">
-      <h2 id="empleados-title">Empleados</h2>
+      <header style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <h2 id="empleados-title">Empleados</h2>
+        <button className="btn primary" onClick={() => setOpen(true)}>+ Nuevo empleado</button>
+      </header>
+
       {error && <p className="msg err">{error}</p>}
+
       <div className="table-wrap">
         <table className="table">
           <thead>
@@ -34,30 +43,30 @@ export default function EmpleadosTable() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((e) => (
+            {rows.map(e => (
               <tr key={e.id}>
                 <td>#{e.id}</td>
-                <td>
-                  {e.apellidos}, {e.nombres}
-                </td>
+                <td>{e.apellidos}, {e.nombres}</td>
                 <td>{e.dni}</td>
                 <td>{e.email}</td>
-                <td>{e.telefono || "—"}</td>
+                <td>{e.telefono || '—'}</td>
                 <td className="tag">{e.rol}</td>
-                <td>{new Date(e.fecha_contratacion).toLocaleDateString()}</td>
-                <td>{e.activo ? "Sí" : "No"}</td>
+                <td>{e.fecha_contratacion ? new Date(e.fecha_contratacion).toLocaleDateString() : '—'}</td>
+                <td>{e.activo ? 'Sí' : 'No'}</td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr>
-                <td colSpan="8" className="muted">
-                  Sin empleados.
-                </td>
-              </tr>
+              <tr><td colSpan="8" className="muted">Sin empleados.</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <EmpleadoModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onCreated={() => { setOpen(false); cargar(); }}
+      />
     </section>
   );
 }

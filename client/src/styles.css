@@ -656,3 +656,51 @@ select:focus {
     margin-top: 10px;
   }
 }
+/* ===== Modal (popup) ===== */
+.modal-overlay{
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal{
+  width: 100%; max-width: 720px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 14px 14px 16px;
+}
+.modal-h{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 6px 4px 10px;
+  border-bottom: 1px dashed #e6e6ea;
+  margin-bottom: 12px;
+}
+.modal-h h3{ margin:0; font-size:18px; font-weight:800; color:#1b2a57; }
+
+.grid-form{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px;
+}
+.grid-form label{ font-size: 13px; }
+.grid-form input[type="text"],
+.grid-form input[type="date"],
+.grid-form input[type="number"],
+.grid-form select{
+  width: 100%;
+}
+.grid-form .switch{
+  align-self: end;
+}
+.modal-actions{
+  grid-column: 1 / -1;
+  display:flex; gap:10px; justify-content:flex-end; margin-top: 6px;
+}
+
+/* móvil */
+@media (max-width: 580px){
+  .grid-form{ grid-template-columns: 1fr; }
+}
