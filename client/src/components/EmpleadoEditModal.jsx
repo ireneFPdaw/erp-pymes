@@ -110,7 +110,7 @@ export default function EmpleadoEditModal({
     setErr("");
 
     const payload = { ...form };
-
+    payload.activo = Boolean(form.activo);
     // normalizaciones
     const toNull = (v) => (v === "" ? null : v);
     payload.fecha_nacimiento = toNull(payload.fecha_nacimiento);
@@ -270,8 +270,19 @@ export default function EmpleadoEditModal({
               onChange={handleChange}
             />
           </label>
-
-          <label>
+<label className="label-inline field-activo">
+  <span>Activo</span>
+  <div className="switch">
+    <input
+      type="checkbox"
+      name="activo"
+      checked={!!form.activo}
+      onChange={handleChange}
+    />
+    <span>{form.activo ? "Sí" : "No"}</span>
+  </div>
+</label>
+          <label className="field-foto">
             Foto
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               {/* preview si existe */}

@@ -975,3 +975,51 @@ select:focus {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* el conjunto checkbox + texto "Sí/No" */
+.switch{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;         /* evita saltos raros */
+}
+
+/* checkbox perfectamente centrado */
+.switch input{
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  vertical-align: middle; /* clave para alinear con el texto */
+  accent-color: #22315c;  /* tu color */
+}
+/* El grid del modal sin márgenes de los labels */
+.grid-form{
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;             /* alinear contenido de cada celda arriba */
+}
+.grid-form label{                 /* anula el margin general de label dentro del grid */
+  margin: 0;
+}
+
+/* Activo a la columna izquierda; Foto a la derecha */
+.grid-form .field-activo{ grid-column: 1 / 2; align-self: start; }
+.grid-form .field-foto  { grid-column: 2 / 3; }
+
+/* Label "inline" estilo switch */
+.grid-form .label-inline{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.grid-form .label-inline .switch{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+.grid-form .label-inline .switch input[type="checkbox"]{
+  width: 18px; height: 18px; margin: 0; vertical-align: middle;
+  accent-color: #5a6bff;
+}

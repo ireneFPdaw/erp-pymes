@@ -89,6 +89,7 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+
     if (
       !form.nombres.trim() ||
       !form.apellidos.trim() ||
@@ -98,11 +99,19 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
       setErr("Completa nombres, apellidos, DNI y email.");
       return;
     }
+
     try {
       setEnviando(true);
+
       const payload = { ...form };
+
+      // ✅ Asegurar boolean
+      payload.activo = Boolean(form.activo);
+
       if (payload.salario === "") payload.salario = null;
+
       await createEmpleado(payload);
+
       onCreated?.(); // refresca tabla
       onClose?.();
     } catch (e) {
@@ -240,9 +249,20 @@ export default function EmpleadoModal({ open, onClose, onCreated }) {
               onChange={handleChange}
             />
           </label>
-
-          <label>
-            Foto (opcional)
+          <label className="label-inline field-activo">
+  <span>Activo</span>
+  <div className="switch">
+    <input
+      type="checkbox"
+      name="activo"
+      checked={!!form.activo}
+      onChange={handleChange}
+    />
+    <span>{form.activo ? "Sí" : "No"}</span>
+  </div>
+</label>
+        <label className="field-foto">
+            Foto
             <div className="file-field">
               <input
                 id="foto"
