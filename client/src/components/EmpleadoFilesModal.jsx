@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from "react";
 import {
-  listArchivos,
-  uploadArchivo,
-  downloadArchivoUrl,
-  deleteArchivo,
-  renameArchivo,
+  getEmpleadoArchivos,
+  uploadEmpleadoArchivo,
+  deleteEmpleadoArchivo,
+  urlVerEmpleadoArchivo,
 } from "../services/api.js";
 
 export default function EmpleadoFilesModal({ open, empleado, onClose }) {
-  const [rows, setRows] = useState([]);
+  const [docs, setDocs] = useState([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // estado para el popup de confirmación
+  const [confirm, setConfirm] = useState({ open: false, id: null, nombre: "" });
+
   useEffect(() => {
     if (!open || !empleado?.id) return;
-    (async () => {
-      setErr("");
-      try {
-        setRows(await listArchivos(empleado.id));
-      } catch (e) {
-        setErr(e.message);
-      }
-    })();
+    setErr("");
+    setBusy(true);
+    getEmpleadoArchivos(empleado.id)
+      .then(setDocs)
+      .catch((e) => setErr(e.message || "Error cargando archivos"))
+      .finally(() => setBusy(false));
   }, [open, empleado?.id]);
 
   if (!open) return null;
@@ -30,41 +30,36 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      setErr("");
       setBusy(true);
-      await uploadArchivo(empleado.id, file);
-      setRows(await listArchivos(empleado.id));
+      await uploadEmpleadoArchivo(empleado.id, file);
+      const fresh = await getEmpleadoArchivos(empleado.id);
+      setDocs(fresh);
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || "No se pudo subir el archivo");
     } finally {
       setBusy(false);
       e.target.value = "";
     }
   }
 
-  async function onRename(id) {
-    const nombre = prompt("Nuevo nombre:");
-    if (!nombre) return;
-    try {
-      setBusy(true);
-      await renameArchivo(empleado.id, id, nombre);
-      setRows(await listArchivos(empleado.id));
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setBusy(false);
-    }
+  function askDelete(file) {
+    setConfirm({ open: true, id: file.id, nombre: file.nombre });
   }
 
-  async function onDelete(id) {
-    if (!confirm("¿Eliminar archivo?")) return;
+  async function doDelete() {
+    const fileId = confirm.id;
+    if (!fileId) return;
     try {
+      setErr("");
       setBusy(true);
-      await deleteArchivo(empleado.id, id);
-      setRows(await listArchivos(empleado.id));
+      await deleteEmpleadoArchivo(empleado.id, fileId);
+      setDocs((d) => d.filter((x) => x.id !== fileId));
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || "No se pudo eliminar");
     } finally {
       setBusy(false);
+      setConfirm({ open: false, id: null, nombre: "" });
     }
   }
 
@@ -73,7 +68,7 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <header className="modal-h">
           <h3>
-            Documentos de {empleado.apellidos}, {empleado.nombres}
+            Documentos de {empleado?.apellidos}, {empleado?.nombres}
           </h3>
           <button className="icon-btn" onClick={onClose}>
             ✕
@@ -82,25 +77,17 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
 
         {err && <p className="msg err">{err}</p>}
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 10,
-          }}
-        >
-          <label className="btn">
-            Subir archivo
-            <input
-              type="file"
-              onChange={onUpload}
-              style={{ display: "none" }}
-              disabled={busy}
-            />
-          </label>
-        </div>
+        <label className="btn">
+          Subir archivo ...
+          <input
+            type="file"
+            style={{ display: "none" }}
+            onChange={onUpload}
+            disabled={busy}
+          />
+        </label>
 
-        <div className="table-wrap">
+        <div className="table-wrap" style={{ marginTop: 12 }}>
           <table className="table">
             <thead>
               <tr>
@@ -108,35 +95,36 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
                 <th>Tamaño</th>
                 <th>Tipo</th>
                 <th>Subido</th>
-                <th style={{ width: 120 }}></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((a) => (
-                <tr key={a.id}>
-                  <td>{a.nombre}</td>
-                  <td>{(a.bytes / 1024).toFixed(1)} KB</td>
-                  <td>{a.mime}</td>
-                  <td>{new Date(a.created_at).toLocaleString()}</td>
+              {docs.map((d) => (
+                <tr key={d.id}>
+                  <td className="truncate">{d.nombre}</td>
+                  <td>{(d.bytes / 1024).toFixed(1)} KB</td>
+                  <td>{d.mime}</td>
+                  <td>{new Date(d.created_at).toLocaleString()}</td>
                   <td style={{ textAlign: "right" }}>
                     <a
-                      className="btn"
-                      href={downloadArchivoUrl(empleado.id, a.id)}
+                      className="btn btn-ver"
+                      href={urlVerEmpleadoArchivo(empleado.id, d.id)}
                       target="_blank"
                       rel="noreferrer"
                     >
                       Ver
                     </a>
-                    <button className="btn" onClick={() => onRename(a.id)}>
-                      Renombrar
-                    </button>
-                    <button className="btn" onClick={() => onDelete(a.id)}>
-                      Eliminar
+                    <button
+                      className="btn btn-borrar"
+                      onClick={() => askDelete(d)}
+                      disabled={busy}
+                    >
+                      Borrar
                     </button>
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {docs.length === 0 && (
                 <tr>
                   <td colSpan="5" className="muted">
                     Sin documentos.
@@ -146,6 +134,38 @@ export default function EmpleadoFilesModal({ open, empleado, onClose }) {
             </tbody>
           </table>
         </div>
+
+        {/* Popup de confirmación */}
+        {confirm.open && (
+          <div
+            className="confirm-backdrop"
+            onClick={() => setConfirm({ open: false, id: null, nombre: "" })}
+          >
+            <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+              <h4>Eliminar archivo</h4>
+              <p>
+                ¿Seguro que deseas eliminar <strong>{confirm.nombre}</strong>?
+              </p>
+              <div className="confirm-actions">
+                <button
+                  className="btn"
+                  onClick={() =>
+                    setConfirm({ open: false, id: null, nombre: "" })
+                  }
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={doDelete}
+                  disabled={busy}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

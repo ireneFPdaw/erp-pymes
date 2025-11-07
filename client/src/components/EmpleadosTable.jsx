@@ -185,7 +185,7 @@ export default function EmpleadosTable() {
                     onDocs={() => {
                       setEmpSel(e);
                       setOpenFiles(true);
-                    }} // ✅ abrir documentos
+                    }} // ← importante
                   />
                 </td>
               </tr>
