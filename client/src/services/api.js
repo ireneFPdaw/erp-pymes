@@ -1,24 +1,21 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 async function http(path, options = {}) {
-  try {
-    const res = await fetch(`${BASE_URL}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options
-    });
-    // 204 sin contenido
-    if (res.status === 204) return null;
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options
+  });
 
-    const data = await res.json();
-    if (!res.ok) {
-      const msg = data?.error || 'Error de red';
-      throw new Error(msg);
-    }
-    return data;
-  } catch (err) {
-    // Para mostrar mensajes manejables en UI
-    throw new Error(err.message || 'Error desconocido');
+  if (res.status === 204) return null;
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = (data && data.error) || `Error HTTP ${res.status}`;
+    throw new Error(msg);
   }
+  return data;
 }
 
 export function getTareas() {

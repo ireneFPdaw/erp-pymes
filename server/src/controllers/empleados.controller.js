@@ -1,42 +1,92 @@
-import { query } from '../db.js';
+// server/src/controllers/empleados.controller.js
+import { query } from "../db.js";
+
+/** Util: limpia "data:image/...;base64,xxx" → "xxx"  */
+function stripDataUrlPrefix(b64) {
+  if (!b64) return "";
+  const i = b64.indexOf(",");
+  return i !== -1 ? b64.slice(i + 1) : b64;
+}
+
+/** Util: estima bytes reales a partir de la longitud base64 */
+function approxBytesFromBase64(b64) {
+  // cada 4 chars base64 ≈ 3 bytes
+  const len = b64.length;
+  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+  return Math.floor((len * 3) / 4) - padding;
+}
 
 export async function listarEmpleados(_req, res, next) {
   try {
     const sql = `
       SELECT id, nombres, apellidos, dni, email, telefono, rol,
              fecha_nacimiento, fecha_contratacion, salario, activo,
-             creada_en, actualizada_en
+             creada_en, actualizada_en, (foto IS NOT NULL) AS tiene_foto
       FROM empleados
       ORDER BY apellidos, nombres;
     `;
     const { rows } = await query(sql, []);
     res.json(rows);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 export async function crearEmpleado(req, res, next) {
   try {
     const {
-      nombres, apellidos, dni, email,
-      telefono = null, direccion = null,
+      nombres,
+      apellidos,
+      dni,
+      email,
+      telefono = null,
+      direccion = null,
       rol,
       fecha_nacimiento = null,
       fecha_contratacion = null,
       salario = null,
       activo = true,
-      foto_base64 = null
+      foto_base64 = null,
     } = req.body || {};
 
     // Validación básica
-    if (!nombres?.trim() || !apellidos?.trim() || !dni?.trim() || !email?.trim() || !rol) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios: nombres, apellidos, dni, email, rol.' });
+    if (
+      !nombres?.trim() ||
+      !apellidos?.trim() ||
+      !dni?.trim() ||
+      !email?.trim() ||
+      !rol
+    ) {
+      return res.status(400).json({
+        error:
+          "Faltan campos obligatorios: nombres, apellidos, DNI, email y rol.",
+      });
     }
-    const rolesPermitidos = ['gerente', 'secretario', 'fisioterapeuta'];
+    const rolesPermitidos = ["gerente", "secretario", "fisioterapeuta"];
     if (!rolesPermitidos.includes(rol)) {
-      return res.status(400).json({ error: 'Rol no válido.' });
+      return res.status(400).json({ error: "Rol no válido." });
     }
 
-    const foto = foto_base64 ? Buffer.from(foto_base64, 'base64') : null;
+    // --- FOTO (opcional): limpiar prefijo y limitar tamaño ---
+    let foto = null;
+    if (foto_base64) {
+      const b64 = stripDataUrlPrefix(foto_base64);
+
+      // Límite 2MB (ajusta si quieres)
+      const bytes = approxBytesFromBase64(b64);
+      const MAX = 2 * 1024 * 1024;
+      if (bytes > MAX) {
+        return res
+          .status(413)
+          .json({ error: "La imagen supera el límite permitido (2 MB)." });
+      }
+
+      try {
+        foto = Buffer.from(b64, "base64");
+      } catch {
+        return res.status(400).json({ error: "Imagen inválida." });
+      }
+    }
 
     const sql = `
       INSERT INTO empleados
@@ -49,21 +99,43 @@ export async function crearEmpleado(req, res, next) {
                 creada_en, actualizada_en
     `;
     const params = [
-      nombres.trim(), apellidos.trim(), dni.trim(), email.trim(),
-      telefono, direccion, rol,
+      nombres.trim(),
+      apellidos.trim(),
+      dni.trim(),
+      email.trim(),
+      telefono || null,
+      direccion || null,
+      rol,
       fecha_nacimiento || null,
       fecha_contratacion || null,
-      salario === '' || salario === null ? null : Number(salario),
+      salario === "" || salario === null ? null : Number(salario),
       Boolean(activo),
-      foto
+      foto,
     ];
+
     const { rows } = await query(sql, params);
     return res.status(201).json(rows[0]);
   } catch (err) {
-    // Duplicados (dni/email)
-    if (err?.code === '23505') {
-      return res.status(409).json({ error: 'DNI o email ya existe.' });
+    if (err?.code === "23505") {
+      // unique_violation
+      return res.status(409).json({ error: "DNI o email ya existe." });
     }
+    next(err);
+  }
+}
+
+/** (Opcional) Servir la foto del empleado */
+export async function obtenerFotoEmpleado(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows } = await query("SELECT foto FROM empleados WHERE id = $1", [
+      id,
+    ]);
+    if (!rows.length || !rows[0].foto) return res.status(404).send("Sin foto");
+    // Podrías detectar el mime; si no, usa genérico
+    res.setHeader("Content-Type", "image/jpeg");
+    res.send(rows[0].foto);
+  } catch (err) {
     next(err);
   }
 }
