@@ -23,20 +23,20 @@ export default function PacientesTable() {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
 
-  // crear
+  // crear/editar/docs
   const [openCreate, setOpenCreate] = useState(false);
-
-  // editar
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-
-  // documentos
   const [openFiles, setOpenFiles] = useState(false);
   const [pacSel, setPacSel] = useState(null);
 
   // filtros
   const [q, setQ] = useState(""); // búsqueda global
   const [activo, setActivo] = useState("todos"); // todos | si | no
+
+  // 📄 paginación (igual que Empleados)
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   async function cargar() {
     try {
@@ -52,20 +52,29 @@ export default function PacientesTable() {
     cargar();
   }, []);
 
-  const lista = useMemo(() => {
+  // Filtra + pagina (mismo enfoque que EmpleadosTable)
+  const filteredPaged = useMemo(() => {
     const g = norm(q);
-    return rows.filter((p) => {
+
+    let data = rows.filter((p) => {
       const txt = norm(
         `${p.apellidos} ${p.nombres} ${p.dni} ${p.email} ${p.telefono || ""} ${
           p.sexo || ""
-        } ${p.patologias || ""}`
+        } ${p.patologias || ""} ${p.alergias || ""} ${p.direccion || ""}`
       );
       const okG = !g || txt.includes(g);
       const okA =
         activo === "todos" ? true : activo === "si" ? p.activo : !p.activo;
       return okG && okA;
     });
-  }, [rows, q, activo]);
+
+    const total = data.length;
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(page, maxPage);
+    data = data.slice((p - 1) * pageSize, p * pageSize);
+
+    return { data, total, maxPage, page: p };
+  }, [rows, q, activo, page, pageSize]);
 
   return (
     <section
@@ -87,13 +96,19 @@ export default function PacientesTable() {
             className="filter-input"
             placeholder="Buscar en todos los campos…"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1); // reset al cambiar búsqueda
+            }}
             style={{ width: 260 }}
           />
           <select
             className="filter-input"
             value={activo}
-            onChange={(e) => setActivo(e.target.value)}
+            onChange={(e) => {
+              setActivo(e.target.value);
+              setPage(1); // reset al cambiar filtro
+            }}
             style={{ width: 140 }}
           >
             <option value="todos">Todos</option>
@@ -128,7 +143,7 @@ export default function PacientesTable() {
           </thead>
 
           <tbody>
-            {lista.map((p) => (
+            {filteredPaged.data.map((p) => (
               <tr key={p.id}>
                 <td>#{p.id}</td>
                 <td>
@@ -157,9 +172,8 @@ export default function PacientesTable() {
                 </td>
                 <td>{p.sexo || "—"}</td>
                 <td className="truncate">{p.patologias || "—"}</td>
-                
-                <td>{p.alergias}</td>
-                <td>{p.direccion}</td>
+                <td className="truncate">{p.alergias || "—"}</td>
+                <td className="truncate">{p.direccion || "—"}</td>
                 <td>{p.activo ? "Sí" : "No"}</td>
 
                 <td style={{ textAlign: "right" }}>
@@ -177,15 +191,63 @@ export default function PacientesTable() {
               </tr>
             ))}
 
-            {lista.length === 0 && (
+            {filteredPaged.data.length === 0 && (
               <tr>
-                <td colSpan="9" className="muted">
+                <td colSpan="11" className="muted">
                   Sin resultados.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* 📄 paginación (idéntica a Empleados) */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: 10,
+        }}
+      >
+        <div className="muted">Total: {filteredPaged.total}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(+e.target.value);
+              setPage(1);
+            }}
+            className="filter-input"
+            style={{ width: 93 }}
+          >
+            {[5, 10, 20, 50].map((n) => (
+              <option key={n} value={n}>
+                {n}/pág.
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={filteredPaged.page <= 1}
+          >
+            ‹ Anterior
+          </button>
+          <span className="muted">
+            Pag. {filteredPaged.page} / {filteredPaged.maxPage}
+          </span>
+          <button
+            className="btn"
+            onClick={() =>
+              setPage((p) => Math.min(filteredPaged.maxPage, p + 1))
+            }
+            disabled={filteredPaged.page >= filteredPaged.maxPage}
+          >
+            Siguiente ›
+          </button>
+        </div>
       </div>
 
       {/* Crear */}
