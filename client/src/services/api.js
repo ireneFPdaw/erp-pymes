@@ -106,9 +106,10 @@ export async function createPaciente(data) {
 }
 
 export async function getPaciente(id) {
-  return http(`/pacientes/${id}`, { method: "GET" });
+  const r = await fetch(`${API}/api/pacientes/${id}`);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
 }
-
 // Archivos de PACIENTES
 export async function getPacienteArchivos(id) {
   const r = await fetch(`${API}/api/pacientes/${id}/archivos`);
@@ -133,4 +134,18 @@ export async function deletePacienteArchivo(id, fileId) {
 }
 export function urlVerPacienteArchivo(id, fileId) {
   return `${API}/api/pacientes/${id}/archivos/${fileId}`;
+}
+
+export async function updatePaciente(id, payload) {
+  const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const res = await fetch(`${API}/api/pacientes/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(txt || "Error actualizando paciente");
+  }
+  return res.json();
 }

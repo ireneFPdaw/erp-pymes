@@ -1,9 +1,14 @@
 // src/components/PacientesTable.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getPacientes } from "../services/api.js";
-import PacienteModal from "./PacienteModal.jsx";
-import PacienteFilesModal from "./PacienteFilesModal.jsx";
-import EmpleadoActions from "./EmpleadoActions.jsx"; // reutilizamos menú con iconos
+
+// Modales
+import PacienteModal from "./PacienteModal.jsx"; // crear
+import PacienteEditModal from "./PacienteEditModal.jsx"; // editar (precargado)
+import PacienteFilesModal from "./PacienteFilesModal.jsx"; // documentos
+
+// Menú de acciones (⋯) reutilizado
+import EmpleadoActions from "./EmpleadoActions.jsx";
 
 const norm = (s) =>
   (s ?? "")
@@ -11,18 +16,27 @@ const norm = (s) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+
 const cleanTel = (t) => (t || "").replace(/[^\d]/g, "");
 
 export default function PacientesTable() {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
+
+  // crear
   const [openCreate, setOpenCreate] = useState(false);
+
+  // editar
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  // documentos
   const [openFiles, setOpenFiles] = useState(false);
   const [pacSel, setPacSel] = useState(null);
 
-  // filtros simples
+  // filtros
   const [q, setQ] = useState(""); // búsqueda global
-  const [activo, setActivo] = useState("todos");
+  const [activo, setActivo] = useState("todos"); // todos | si | no
 
   async function cargar() {
     try {
@@ -33,6 +47,7 @@ export default function PacientesTable() {
       setError(e.message || "Error cargando pacientes");
     }
   }
+
   useEffect(() => {
     cargar();
   }, []);
@@ -66,6 +81,7 @@ export default function PacientesTable() {
         }}
       >
         <h2 id="pacientes-title">Pacientes</h2>
+
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             className="filter-input"
@@ -84,6 +100,7 @@ export default function PacientesTable() {
             <option value="si">Activos</option>
             <option value="no">Inactivos</option>
           </select>
+
           <button className="btn primary" onClick={() => setOpenCreate(true)}>
             + Nuevo paciente
           </button>
@@ -103,10 +120,13 @@ export default function PacientesTable() {
               <th>Teléfono</th>
               <th>Sexo</th>
               <th>Patologías</th>
+              <th>Alergias</th>
+              <th>Dirección</th>
               <th>Activo</th>
               <th style={{ width: 40 }}></th>
             </tr>
           </thead>
+
           <tbody>
             {lista.map((p) => (
               <tr key={p.id}>
@@ -137,15 +157,17 @@ export default function PacientesTable() {
                 </td>
                 <td>{p.sexo || "—"}</td>
                 <td className="truncate">{p.patologias || "—"}</td>
+                
+                <td>{p.alergias}</td>
+                <td>{p.direccion}</td>
                 <td>{p.activo ? "Sí" : "No"}</td>
+
                 <td style={{ textAlign: "right" }}>
                   <EmpleadoActions
-                    onEdit={
-                      () =>
-                        setOpenCreate(
-                          true
-                        ) /* opcional: podrías tener un PacienteEditModal */
-                    }
+                    onEdit={() => {
+                      setEditId(p.id);
+                      setOpenEdit(true);
+                    }}
                     onDocs={() => {
                       setPacSel(p);
                       setOpenFiles(true);
@@ -154,6 +176,7 @@ export default function PacientesTable() {
                 </td>
               </tr>
             ))}
+
             {lista.length === 0 && (
               <tr>
                 <td colSpan="9" className="muted">
@@ -165,7 +188,7 @@ export default function PacientesTable() {
         </table>
       </div>
 
-      {/* Modales */}
+      {/* Crear */}
       <PacienteModal
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -174,6 +197,19 @@ export default function PacientesTable() {
           cargar();
         }}
       />
+
+      {/* Editar (precargado) */}
+      <PacienteEditModal
+        open={openEdit}
+        pacienteId={editId}
+        onClose={() => setOpenEdit(false)}
+        onUpdated={() => {
+          setOpenEdit(false);
+          cargar();
+        }}
+      />
+
+      {/* Documentos */}
       <PacienteFilesModal
         open={openFiles}
         paciente={pacSel}
