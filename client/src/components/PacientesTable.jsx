@@ -1,7 +1,7 @@
 // src/components/PacientesTable.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getPacientes } from "../services/api.js";
-
+import { useNavigate } from "react-router-dom";
 // Modales
 import PacienteModal from "./PacienteModal.jsx"; // crear
 import PacienteEditModal from "./PacienteEditModal.jsx"; // editar (precargado)
@@ -27,7 +27,7 @@ const cleanTel = (t) => (t || "").replace(/[^\d]/g, "");
 export default function PacientesTable() {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");
-
+  const navigate = useNavigate();
   // crear/editar/docs
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -181,7 +181,6 @@ export default function PacientesTable() {
                 <td className="truncate">{fmtFecha(p.fecha_nacimiento)}</td>
                 <td className="truncate">{p.direccion || "—"}</td>
                 <td>{p.activo ? "Sí" : "No"}</td>
-
                 <td style={{ textAlign: "right" }}>
                   <PacienteActions
                     onEdit={() => {
@@ -192,7 +191,8 @@ export default function PacientesTable() {
                       setPacSel(p);
                       setOpenFiles(true);
                     }}
-                    onDownload={() => exportFichaPacientePDF(p)} // ← Descargar datos
+                    onHistory={() => navigate(`/pacientes/${p.id}`)}
+                    onDownload={() => exportFichaPacientePDF(p)}
                   />
                 </td>
               </tr>
@@ -200,7 +200,7 @@ export default function PacientesTable() {
 
             {filteredPaged.data.length === 0 && (
               <tr>
-                <td colSpan="11" className="muted">
+                <td colSpan="12" className="muted">
                   Sin resultados.
                 </td>
               </tr>

@@ -2,12 +2,24 @@ import React, { useEffect, useState } from "react";
 import { getPaciente, updatePaciente } from "../services/api.js";
 
 const init = {
-  nombres: "", apellidos: "", dni: "", email: "",
-  telefono: "", direccion: "", sexo: "", patologias: "",
-  fecha_nacimiento: "", activo: true,
+  nombres: "",
+  apellidos: "",
+  dni: "",
+  email: "",
+  telefono: "",
+  direccion: "",
+  sexo: "",
+  patologias: "",
+  fecha_nacimiento: "",
+  activo: true,
 };
 
-export default function PacienteEditModal({ open, pacienteId, onClose, onUpdated }) {
+export default function PacienteEditModal({
+  open,
+  pacienteId,
+  onClose,
+  onUpdated,
+}) {
   const [form, setForm] = useState(init);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21,11 +33,12 @@ export default function PacienteEditModal({ open, pacienteId, onClose, onUpdated
         setForm({
           ...init,
           ...p,
-          fecha_nacimiento: p.fecha_nacimiento?.slice(0,10) || "",
+          fecha_nacimiento: p.fecha_nacimiento?.slice(0, 10) || "",
           telefono: p.telefono || "",
           direccion: p.direccion || "",
           sexo: p.sexo || "",
           patologias: p.patologias || "",
+          historia_clinica: p.historia_clinica || "",
           activo: !!p.activo,
         });
       })
@@ -62,7 +75,9 @@ export default function PacienteEditModal({ open, pacienteId, onClose, onUpdated
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <header className="modal-h">
           <h3>Editar paciente</h3>
-          <button className="icon-btn" onClick={onClose}>✕</button>
+          <button className="icon-btn" onClick={onClose}>
+            ✕
+          </button>
         </header>
 
         {err && <p className="msg err">{err}</p>}
@@ -70,35 +85,84 @@ export default function PacienteEditModal({ open, pacienteId, onClose, onUpdated
         <form className="grid-form" onSubmit={onSubmit}>
           <label>
             Nombres*
-            <input className="control" name="nombres" value={form.nombres} onChange={onChange} />
+            <input
+              className="control"
+              name="nombres"
+              value={form.nombres}
+              onChange={onChange}
+            />
           </label>
           <label>
             Apellidos*
-            <input className="control" name="apellidos" value={form.apellidos} onChange={onChange} />
+            <input
+              className="control"
+              name="apellidos"
+              value={form.apellidos}
+              onChange={onChange}
+            />
           </label>
           <label>
             DNI*
-            <input className="control" name="dni" value={form.dni} onChange={onChange} />
+            <input
+              className="control"
+              name="dni"
+              value={form.dni}
+              onChange={onChange}
+            />
           </label>
           <label>
             Email*
-            <input className="control" name="email" value={form.email} onChange={onChange} />
+            <input
+              className="control"
+              name="email"
+              value={form.email}
+              onChange={onChange}
+            />
           </label>
           <label>
             Teléfono
-            <input className="control" name="telefono" value={form.telefono} onChange={onChange} />
+            <input
+              className="control"
+              name="telefono"
+              value={form.telefono}
+              onChange={onChange}
+            />
           </label>
           <label>
             Dirección
-            <input className="control" name="direccion" value={form.direccion} onChange={onChange} />
+            <input
+              className="control"
+              name="direccion"
+              value={form.direccion}
+              onChange={onChange}
+            />
           </label>
           <label>
             Sexo
-            <input className="control" name="sexo" value={form.sexo} onChange={onChange} />
+            <input
+              className="control"
+              name="sexo"
+              value={form.sexo}
+              onChange={onChange}
+            />
           </label>
           <label>
             Patologías
-            <input className="control" name="patologias" value={form.patologias} onChange={onChange} />
+            <input
+              className="control"
+              name="patologias"
+              value={form.patologias}
+              onChange={onChange}
+            />
+          </label>
+            <label>
+            Historia Clínica
+            <input
+              className="control"
+              name="historia_clinica"
+              value={form.historia_clinica}
+              onChange={onChange}
+            />
           </label>
           <label>
             Fecha nacimiento
@@ -124,7 +188,9 @@ export default function PacienteEditModal({ open, pacienteId, onClose, onUpdated
           </label>
 
           <div className="modal-actions">
-            <button type="button" className="btn" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn" onClick={onClose}>
+              Cancelar
+            </button>
             <button className="btn primary" disabled={busy}>
               {busy ? "Guardando…" : "Guardar"}
             </button>

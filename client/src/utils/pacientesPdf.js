@@ -37,6 +37,7 @@ export function exportFichaPacientePDF(paciente, opts = {}) {
     ["Dirección", safe(paciente.direccion)],
     ["Alergias", safe(paciente.alergias)],
     ["Patologías", safe(paciente.patologias)],
+    ["Historia Clínica", safe(paciente.historia_clinica)],
     ["Activo", paciente.activo ? "Sí" : "No"],
     ["Fecha nacimiento", formatFecha(paciente.fecha_nacimiento)],
   ];

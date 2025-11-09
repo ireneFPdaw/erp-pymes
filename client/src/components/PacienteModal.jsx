@@ -10,6 +10,7 @@ const init = {
   telefono: "",
   sexo: "F", // F | M | Otro
   patologias: "",
+  historia_clinica: "",
   activo: true,
 };
 
@@ -142,6 +143,35 @@ export default function PacienteModal({ open, onClose, onCreated }) {
               className="control"
               name="patologias"
               value={form.patologias}
+              onChange={handleChange}
+            />
+          </label>
+
+          <label style={{ gridColumn: "1 / -1" }}>
+            Historia clínica
+            <input
+              className="control"
+              name="historia_clinica"
+              value={form.historia_clinica}
+              onChange={handleChange}
+            />
+          </label>
+
+          <label style={{ gridColumn: "1 / -1" }}>
+            Dirección
+            <input
+              className="control"
+              name="direccion"
+              value={form.direccion}
+              onChange={handleChange}
+            />
+          </label>
+          <label style={{ gridColumn: "1 / -1" }}>
+            Alergias
+            <input
+              className="control"
+              name="alergias"
+              value={form.alergias}
               onChange={handleChange}
             />
           </label>

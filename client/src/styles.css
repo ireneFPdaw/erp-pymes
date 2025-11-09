@@ -531,6 +531,7 @@ select:focus {
     border: 1px solid #e3e1d7;
     background: #fff;
     box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+    overflow-y: visible;
 }
 .table {
     width: 100%;
@@ -912,16 +913,13 @@ select:focus {
     background: #f1f5ff;
 }
 
-.menu-wrap {
-    position: relative;
-    display: inline-block;
-}
+.menu-wrap { position: relative; z-index: 99999; }
 .menu {
     position: absolute;
     right: 0;
     top: 100%;
     margin-top: 6px;
-    z-index: 20;
+    z-index: 99999;
     background: #fff;
     border: 1px solid #e6e8f1;
     border-radius: 10px;
@@ -947,13 +945,13 @@ select:focus {
     padding: 8px 10px;
     border-radius: 8px;
     cursor: pointer;
-     gap: 8px;
+    gap: 8px;
     font-size: 14px;
     display: flex;
 }
 .menu-item svg {
-  flex-shrink: 0;
-  opacity: 0.8;
+    flex-shrink: 0;
+    opacity: 0.8;
 }
 .menu-item:hover {
     background: #f6f7ff;
@@ -1060,105 +1058,111 @@ select:focus {
 }
 /* Botones de acciones en la tabla: mismo tamaño y separados */
 .table td .btn {
-  display: inline-flex;            /* centra texto vertical/horizontal */
-  align-items: center;
-  justify-content: center;
-  height: 36px;                    /* alto consistente */
-  min-width: 84px;                 /* ancho mínimo igual */
-  padding: 0 14px;                 /* mismo padding para a y button */
-  font-weight: 700;
-  border-radius: 12px;
+    display: inline-flex; /* centra texto vertical/horizontal */
+    align-items: center;
+    justify-content: center;
+    height: 36px; /* alto consistente */
+    min-width: 84px; /* ancho mínimo igual */
+    padding: 0 14px; /* mismo padding para a y button */
+    font-weight: 700;
+    border-radius: 12px;
 }
 
 /* separación entre botones */
 .table td .btn + .btn {
-  margin-left: 10px;
+    margin-left: 10px;
 }
 
 /* Estilo del botón "Ver" (mantiene look actual) */
 .table td .btn-ver {
-  background: linear-gradient(180deg, #eef1ff, #e7eaff);
-  border: 1px solid #c9d2ff;
-  color: #18265b;
+    background: linear-gradient(180deg, #eef1ff, #e7eaff);
+    border: 1px solid #c9d2ff;
+    color: #18265b;
 }
 
 /* Estilo del botón "Borrar" en rojo */
 .table td .btn-borrar {
-  background: #ef4444;             /* rojo */
-  border: 1px solid #ef4444;
-  color: #fff;
+    background: #ef4444; /* rojo */
+    border: 1px solid #ef4444;
+    color: #fff;
 }
 .table td .btn-borrar:hover {
-  background: #dc2626;
-  border-color: #dc2626;
+    background: #dc2626;
+    border-color: #dc2626;
 }
 .table td .btn-borrar:disabled {
-  opacity: .6;
-  cursor: not-allowed;
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 /* Popup de confirmación dentro del modal */
-.confirm-backdrop{
-  position: fixed;           /* por encima del modal */
-  inset: 0;
-  background: rgba(15,23,42,.28);
-  display: grid;
-  place-items: center;
-  z-index: 1100;
+.confirm-backdrop {
+    position: fixed; /* por encima del modal */
+    inset: 0;
+    background: rgba(15, 23, 42, 0.28);
+    display: grid;
+    place-items: center;
+    z-index: 1100;
 }
 
-.confirm-card{
-  width: min(480px, 92vw);
-  background: #fff;
-  border: 1px solid #e6e8f1;
-  border-radius: 14px;
-  box-shadow: 0 14px 30px rgba(15,23,42,.18);
-  padding: 16px 18px;
+.confirm-card {
+    width: min(480px, 92vw);
+    background: #fff;
+    border: 1px solid #e6e8f1;
+    border-radius: 14px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+    padding: 16px 18px;
 }
 
-.confirm-card h4{
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 800;
-  color: #1b2a57;
+.confirm-card h4 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 800;
+    color: #1b2a57;
 }
 
-.confirm-card p{
-  margin: 0 0 14px;
-  color: #334155;
+.confirm-card p {
+    margin: 0 0 14px;
+    color: #334155;
 }
 
-.confirm-actions{
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+.confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 /* Botón rojo de peligro */
 .btn-danger,
-.btn-borrar{              /* reutiliza tu botón Borrar si quieres */
-  background: #ef4444;
-  border: 1px solid #ef4444;
-  color: #fff;
+.btn-borrar {
+    /* reutiliza tu botón Borrar si quieres */
+    background: #ef4444;
+    border: 1px solid #ef4444;
+    color: #fff;
 }
 .btn-danger:hover,
-.btn-borrar:hover{
-  background:#dc2626;
-  border-color:#dc2626;
+.btn-borrar:hover {
+    background: #dc2626;
+    border-color: #dc2626;
 }
 
 /* tamaño y separación homogéneos para Ver/Borrar */
-.table td .btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  height:36px;
-  min-width:84px;
-  padding:0 14px;
-  border-radius:12px;
+.table td .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-width: 84px;
+    padding: 0 14px;
+    border-radius: 12px;
 }
-.table td .btn + .btn{ margin-left:10px; }
-.table thead th[role="button"] { cursor: pointer; user-select: none; }
+.table td .btn + .btn {
+    margin-left: 10px;
+}
+.table thead th[role="button"] {
+    cursor: pointer;
+    user-select: none;
+}
 .table thead th[aria-sort="ascending"],
 .table thead th[aria-sort="descending"] {
-  background: #f2f4ff;          /* suave */
+    background: #f2f4ff; /* suave */
 }

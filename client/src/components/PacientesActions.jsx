@@ -1,20 +1,23 @@
+// src/components/PacientesActions.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { MoreVertical, Pencil, FolderOpen, Download } from "lucide-react";
+import {
+  MoreVertical,
+  Pencil,
+  FolderOpen,
+  Download,
+  FileText,
+} from "lucide-react";
 
-/**
- * Menú de acciones específico para Pacientes.
- * Escalable: puedes añadir aquí nuevas acciones de pacientes sin afectar a Empleados.
- */
 export default function PacienteActions({
-  onEdit,       // () => void
-  onDocs,       // () => void
-  onDownload,   // () => void   (Descargar datos PDF)
-  extraItems,   // [{icon: <Icon/>, label: '...', onClick: fn}]  opcional para crecer sin tocar este archivo
+  onEdit,
+  onDocs,
+  onDownload,
+  onHistory,
+  extraItems,
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // Cerrar al hacer click fuera
   useEffect(() => {
     const onClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -51,11 +54,7 @@ export default function PacienteActions({
       </button>
 
       {open && (
-        <div
-          role="menu"
-          className="menu"
-          style={menuStyle}
-        >
+        <div role="menu" className="menu" style={menuStyle}>
           {onEdit && (
             <Item
               icon={<Pencil size={16} style={{ opacity: 0.85 }} />}
@@ -63,7 +62,6 @@ export default function PacienteActions({
               onClick={onEdit}
             />
           )}
-
           {onDocs && (
             <Item
               icon={<FolderOpen size={16} style={{ opacity: 0.85 }} />}
@@ -71,7 +69,13 @@ export default function PacienteActions({
               onClick={onDocs}
             />
           )}
-
+          {onHistory && (
+            <Item
+              icon={<FileText size={16} style={{ opacity: 0.85 }} />}
+              label="Ir a historia clínica"
+              onClick={onHistory}
+            />
+          )}
           {onDownload && (
             <Item
               icon={<Download size={16} style={{ opacity: 0.85 }} />}
@@ -80,10 +84,14 @@ export default function PacienteActions({
             />
           )}
 
-          {/* Items extra para crecer sin tocar este archivo */}
           {Array.isArray(extraItems) &&
             extraItems.map((it, i) => (
-              <Item key={i} icon={it.icon} label={it.label} onClick={it.onClick} />
+              <Item
+                key={i}
+                icon={it.icon}
+                label={it.label}
+                onClick={it.onClick}
+              />
             ))}
         </div>
       )}
@@ -100,9 +108,8 @@ const menuStyle = {
   boxShadow: "0 8px 20px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06)",
   borderRadius: 10,
   padding: 6,
-  zIndex: 20,
+  zIndex: 99999,  // ← A tope
 };
-
 const itemStyle = {
   display: "flex",
   alignItems: "center",

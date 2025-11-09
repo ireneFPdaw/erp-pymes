@@ -1,9 +1,12 @@
+// src/App.jsx
 import React, { useState } from "react";
+import { Routes, Route } from "react-router-dom";           // 👈
 import { createTarea, getTarea, updateTarea } from "./services/api.js";
 import TareaForm from "./components/TareaForm.jsx";
 import TareaBoard from "./components/TareaBoard.jsx";
 import EmpleadosTable from "./components/EmpleadosTable.jsx";
 import PacientesTable from "./components/PacientesTable.jsx";
+import HistoriaClinica from "./pages/HistoriaClinica.jsx";  // 👈 crea este archivo si no lo tienes
 
 export default function App() {
   const [editando, setEditando] = useState(null);
@@ -41,85 +44,98 @@ export default function App() {
     }
   }
 
+  // —— Rutas —— //
   return (
-    <div className="app">
-      <header className="header" role="banner">
-        <div className="wrap">
-          <h1>Centro Fisioterapia Madrid</h1>
-         
-        </div>
-      </header>
+    <Routes>
+      {/* Home (tu app actual con tabs) */}
+      <Route
+        path="/"
+        element={
+          <div className="app">
+            <header className="header" role="banner">
+              <div className="wrap">
+                <h1>Centro Fisioterapia Madrid</h1>
+              </div>
+            </header>
 
-      <nav className="tabs wrap">
-        <button
-          className={`tab-btn ${vista === "tablero" ? "active" : ""}`}
-          onClick={() => setVista("tablero")}
-        >
-          Tareas
-        </button>
-        <button
-          className={`tab-btn ${vista === "empleados" ? "active" : ""}`}
-          onClick={() => setVista("empleados")}
-        >
-          Empleados
-        </button>
-        <button
-          className={`tab-btn ${vista === "pacientes" ? "active" : ""}`}
-          onClick={() => setVista("pacientes")}
-        >
-          Pacientes
-        </button>
-      </nav>
-
-      {vista === "tablero" ? (
-        <main className="main" role="main">
-          <section className="panel paper" aria-labelledby="form-title">
-            <h2 id="form-title">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
-            {mensaje && (
-              <p
-                className={`msg ${mensaje.startsWith("✅") ? "ok" : "err"}`}
-                role="status"
+            <nav className="tabs wrap">
+              <button
+                className={`tab-btn ${vista === "tablero" ? "active" : ""}`}
+                onClick={() => setVista("tablero")}
               >
-                {mensaje}
-              </p>
-            )}
-            <TareaForm
-              tareaSeleccionada={editando}
-              onCancel={() => setEditando(null)}
-              onSubmit={onSubmit}
-            />
-          </section>
+                Tareas
+              </button>
+              <button
+                className={`tab-btn ${vista === "empleados" ? "active" : ""}`}
+                onClick={() => setVista("empleados")}
+              >
+                Empleados
+              </button>
+              <button
+                className={`tab-btn ${vista === "pacientes" ? "active" : ""}`}
+                onClick={() => setVista("pacientes")}
+              >
+                Pacientes
+              </button>
+              <button
+                className={`tab-btn ${vista === "citas" ? "active" : ""}`}
+                onClick={() => setVista("citas")}
+              >
+                Citas
+              </button>
+            </nav>
 
-          <section aria-labelledby="board-title" className="board-section">
-            <h2 id="board-title" className="visually-hidden">
-              Tablero Kanban
-            </h2>
-            <div className="board-wrap kanban" aria-label="Tablero Kanban">
-              <TareaBoard
-                onEdit={onEdit}
-                refreshKey={refreshKey}
-                onRefreshing={setCargando}
-              />
-            </div>
-            {cargando && (
-              <p className="muted" aria-live="polite">
-                Cargando…
-              </p>
+            {vista === "tablero" ? (
+              <main className="main" role="main">
+                <section className="panel paper" aria-labelledby="form-title">
+                  <h2 id="form-title">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
+                  {mensaje && (
+                    <p
+                      className={`msg ${mensaje.startsWith("✅") ? "ok" : "err"}`}
+                      role="status"
+                    >
+                      {mensaje}
+                    </p>
+                  )}
+                  <TareaForm
+                    tareaSeleccionada={editando}
+                    onCancel={() => setEditando(null)}
+                    onSubmit={onSubmit}
+                  />
+                </section>
+
+                <section aria-labelledby="board-title" className="board-section">
+                  <h2 id="board-title" className="visually-hidden">
+                    Tablero Kanban
+                  </h2>
+                  <div className="board-wrap kanban" aria-label="Tablero Kanban">
+                    <TareaBoard
+                      onEdit={onEdit}
+                      refreshKey={refreshKey}
+                      onRefreshing={setCargando}
+                    />
+                  </div>
+                  {cargando && (
+                    <p className="muted" aria-live="polite">
+                      Cargando…
+                    </p>
+                  )}
+                </section>
+              </main>
+            ) : (
+              <main
+                className="wrap-narrow"
+                style={{ maxWidth: "2200px", margin: "22px auto 46px", padding: "0 16px" }}
+              >
+                {vista === "empleados" ? <EmpleadosTable /> : <PacientesTable />}
+              </main>
             )}
-          </section>
-        </main>
-      ) : (
-        <main
-          className="wrap-narrow"
-          style={{
-            maxWidth: "2200px",
-            margin: "22px auto 46px",
-            padding: "0 16px",
-          }}
-        >
-          {vista === "empleados" ? <EmpleadosTable /> : <PacientesTable />}
-        </main>
-      )}
-    </div>
+          </div>
+        }
+      />
+
+      {/* Historia clínica de un paciente */}
+      <Route path="/pacientes/:id" element={<HistoriaClinica />} />
+    </Routes>
   );
 }
