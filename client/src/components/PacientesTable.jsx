@@ -6,9 +6,8 @@ import { getPacientes } from "../services/api.js";
 import PacienteModal from "./PacienteModal.jsx"; // crear
 import PacienteEditModal from "./PacienteEditModal.jsx"; // editar (precargado)
 import PacienteFilesModal from "./PacienteFilesModal.jsx"; // documentos
-
-// Menú de acciones (⋯) reutilizado
-import EmpleadoActions from "./EmpleadoActions.jsx";
+import { exportFichaPacientePDF } from "../utils/pacientesPdf.js";
+import PacienteActions from "./PacientesActions.jsx";
 
 const norm = (s) =>
   (s ?? "")
@@ -16,6 +15,12 @@ const norm = (s) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+
+const fmtFecha = (val) => {
+  if (!val) return "—";
+  const [y, m, d] = String(val).split("T")[0].split("-");
+  return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y.slice(-2)}`;
+};
 
 const cleanTel = (t) => (t || "").replace(/[^\d]/g, "");
 
@@ -34,7 +39,7 @@ export default function PacientesTable() {
   const [q, setQ] = useState(""); // búsqueda global
   const [activo, setActivo] = useState("todos"); // todos | si | no
 
-  // 📄 paginación (igual que Empleados)
+  // paginación
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -52,7 +57,6 @@ export default function PacientesTable() {
     cargar();
   }, []);
 
-  // Filtra + pagina (mismo enfoque que EmpleadosTable)
   const filteredPaged = useMemo(() => {
     const g = norm(q);
 
@@ -98,7 +102,7 @@ export default function PacientesTable() {
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
-              setPage(1); // reset al cambiar búsqueda
+              setPage(1);
             }}
             style={{ width: 260 }}
           />
@@ -107,7 +111,7 @@ export default function PacientesTable() {
             value={activo}
             onChange={(e) => {
               setActivo(e.target.value);
-              setPage(1); // reset al cambiar filtro
+              setPage(1);
             }}
             style={{ width: 140 }}
           >
@@ -136,6 +140,7 @@ export default function PacientesTable() {
               <th>Sexo</th>
               <th>Patologías</th>
               <th>Alergias</th>
+              <th>Fecha de nacimiento</th>
               <th>Dirección</th>
               <th>Activo</th>
               <th style={{ width: 40 }}></th>
@@ -173,11 +178,12 @@ export default function PacientesTable() {
                 <td>{p.sexo || "—"}</td>
                 <td className="truncate">{p.patologias || "—"}</td>
                 <td className="truncate">{p.alergias || "—"}</td>
+                <td className="truncate">{fmtFecha(p.fecha_nacimiento)}</td>
                 <td className="truncate">{p.direccion || "—"}</td>
                 <td>{p.activo ? "Sí" : "No"}</td>
 
                 <td style={{ textAlign: "right" }}>
-                  <EmpleadoActions
+                  <PacienteActions
                     onEdit={() => {
                       setEditId(p.id);
                       setOpenEdit(true);
@@ -186,6 +192,7 @@ export default function PacientesTable() {
                       setPacSel(p);
                       setOpenFiles(true);
                     }}
+                    onDownload={() => exportFichaPacientePDF(p)} // ← Descargar datos
                   />
                 </td>
               </tr>
@@ -202,7 +209,7 @@ export default function PacientesTable() {
         </table>
       </div>
 
-      {/* 📄 paginación (idéntica a Empleados) */}
+      {/* paginación */}
       <div
         style={{
           display: "flex",
@@ -250,7 +257,7 @@ export default function PacientesTable() {
         </div>
       </div>
 
-      {/* Crear */}
+      {/* Modales */}
       <PacienteModal
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -259,8 +266,6 @@ export default function PacientesTable() {
           cargar();
         }}
       />
-
-      {/* Editar (precargado) */}
       <PacienteEditModal
         open={openEdit}
         pacienteId={editId}
@@ -270,8 +275,6 @@ export default function PacientesTable() {
           cargar();
         }}
       />
-
-      {/* Documentos */}
       <PacienteFilesModal
         open={openFiles}
         paciente={pacSel}
