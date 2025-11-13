@@ -47,6 +47,7 @@ export default function CitasPage() {
   const [mensaje, setMensaje] = useState("");
   const [cargando, setCargando] = useState(false);
   const [citaAEliminar, setCitaAEliminar] = useState(null);
+  const [formError, setFormError] = useState("");
 
   // cargar empleados y pacientes
   useEffect(() => {
@@ -73,6 +74,8 @@ export default function CitasPage() {
   async function handleSubmit(cita) {
     try {
       setMensaje("");
+      setFormError(""); // limpiamos error del modal
+
       if (cita.id) {
         await updateCita(cita.id, cita);
         setMensaje("✅ Cita actualizada");
@@ -80,14 +83,17 @@ export default function CitasPage() {
         await createCita(cita);
         setMensaje("✅ Cita creada");
       }
+
       setSeleccionada(null);
+
       // recargar citas
       const params = { from: rango.from, to: rango.to };
       if (empleadoId !== "all") params.empleadoId = empleadoId;
       const data = await getCitas(params);
       setCitas(data);
     } catch (err) {
-      setMensaje("❌ " + err.message);
+      // mostramos el error dentro del modal
+      setFormError(err.message || "Error al guardar la cita");
     }
   }
 
@@ -170,20 +176,21 @@ export default function CitasPage() {
           cita={seleccionada}
           empleados={profesionales}
           pacientes={pacientes}
+          error={formError}
           onSubmit={handleSubmit}
           onDelete={
             seleccionada.id ? () => setCitaAEliminar(seleccionada) : null
           }
-          onClose={() => setSeleccionada(null)}
+          onClose={() => {
+            setFormError("");
+            setSeleccionada(null);
+          }}
         />
       )}
 
       {/* Popup de confirmación de borrado */}
       {citaAEliminar && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setCitaAEliminar(null)}
-        >
+        <div className="modal-backdrop" onClick={() => setCitaAEliminar(null)}>
           <div
             className="modal modal-confirm"
             onClick={(e) => e.stopPropagation()}
@@ -219,10 +226,7 @@ export default function CitasPage() {
                 <br />
                 Paciente:{" "}
                 <strong>
-                  {getPacienteNombreById(
-                    citaAEliminar.pacienteId,
-                    pacientes
-                  )}
+                  {getPacienteNombreById(citaAEliminar.pacienteId, pacientes)}
                 </strong>
               </p>
             </div>

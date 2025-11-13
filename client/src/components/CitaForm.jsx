@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
 
-const ESTADOS = ["programada", "realizada", "cancelada", "no acude"];
+const ESTADOS = ["programada", "realizada", "cancelada", "no_acude"];
+
+const SALAS = [
+  { value: "F1", label: "Sala fisio 1" },
+  { value: "F2", label: "Sala fisio 2" },
+  { value: "F3", label: "Sala fisio 3" },
+  { value: "DESPACHO", label: "Despacho" },
+];
 
 export default function CitaForm({
   cita,
   empleados,
   pacientes,
+  error, // 👈 NUEVO
   onSubmit,
   onDelete,
   onClose,
@@ -64,6 +72,13 @@ export default function CitaForm({
         </header>
 
         <form className="modal-body" onSubmit={handleSubmit}>
+          {/* mensaje de error dentro del modal */}
+          {error && (
+            <p className="msg err" style={{ marginBottom: "0.75rem" }}>
+              {error}
+            </p>
+          )}
+
           <div className="form-grid">
             <label>
               Profesional
@@ -76,7 +91,6 @@ export default function CitaForm({
                 <option value="">Selecciona profesional</option>
                 {empleados.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {/* usa nombres/apellidos de tu tabla */}
                     {e.nombres && e.apellidos
                       ? `${e.apellidos}, ${e.nombres}`
                       : e.nombre || `Empleado ${e.id}`}
@@ -149,11 +163,7 @@ export default function CitaForm({
 
             <label>
               Estado
-              <select
-                name="estado"
-                value={form.estado}
-                onChange={handleChange}
-              >
+              <select name="estado" value={form.estado} onChange={handleChange}>
                 {ESTADOS.map((e) => (
                   <option key={e} value={e}>
                     {e}
@@ -164,12 +174,14 @@ export default function CitaForm({
 
             <label>
               Sala
-              <input
-                type="text"
-                name="sala"
-                value={form.sala}
-                onChange={handleChange}
-              />
+              <select name="sala" value={form.sala} onChange={handleChange}>
+                <option value="">Sin sala asignada</option>
+                {SALAS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
@@ -185,11 +197,7 @@ export default function CitaForm({
 
           <footer className="modal-footer">
             {onDelete && form.id && (
-              <button
-                type="button"
-                className="btn danger"
-                onClick={onDelete}
-              >
+              <button type="button" className="btn danger" onClick={onDelete}>
                 Eliminar
               </button>
             )}
