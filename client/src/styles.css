@@ -1360,3 +1360,57 @@ Citas*/
 .citas-grid {
   grid-template-columns: 90px repeat(7, minmax(150px, 1fr));
 }
+
+/* ---- Campos del formulario de cita (uniformes) ---- */
+
+.modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.modal input[type="text"],
+.modal input[type="date"],
+.modal input[type="time"],
+.modal select,
+.modal textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #f9fafb;
+  outline: none;
+  appearance: none; /* quita estilos nativos feos en algunos navegadores */
+}
+
+.modal input[type="date"],
+.modal input[type="time"] {
+  padding-right: 0.9rem; /* hueco para iconos nativos */
+}
+
+.modal select {
+  background-color: #f9fafb;
+}
+
+.modal textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.25);
+  background: #ffffff;
+}
+
+/* modal de confirmación algo más compacto */
+.modal.modal-confirm {
+  max-width: 420px;
+}
