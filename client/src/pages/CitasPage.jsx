@@ -79,7 +79,7 @@ export default function CitasPage() {
   }
 
   return (
-    <div className="paper">
+    <div className="paper citas-page">
       <header className="citas-header">
         <div className="citas-header-main">
           <h2>Citas</h2>
@@ -121,8 +121,8 @@ export default function CitasPage() {
 
       <CitasCalendar
         citas={citas}
-        empleados={profesionales}        // usamos todos los empleados
-        empleadoFiltro={empleadoId}      // aquí sí filtramos por persona
+        empleados={profesionales} // usamos todos los empleados
+        empleadoFiltro={empleadoId} // aquí sí filtramos por persona
         onRangeChange={setRango}
         onSelectCita={setSeleccionada}
         onCreateCita={(slot) =>

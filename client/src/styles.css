@@ -1188,6 +1188,10 @@ Citas*/
   border-radius: 18px;
   border: 1px solid #e5e5f0;
   overflow: hidden;
+  /* 👉 ocupa todo el ancho disponible */
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .citas-calendar-toolbar {
@@ -1205,8 +1209,10 @@ Citas*/
 
 .citas-grid {
   display: grid;
-  grid-template-columns: 70px repeat(7, 1fr);
-  font-size: 0.85rem;
+  grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+  font-size: 0.9rem;
+  /* 👉 opcional: altura fija para que crezca hacia abajo */
+  min-height: 70vh;
 }
 
 .citas-grid-header {
@@ -1225,19 +1231,20 @@ Citas*/
 }
 
 .hour-col {
-  padding: 0.4rem;
+  padding: 0.6rem;
   text-align: right;
   border-right: 1px solid #f0f0f0;
   background: #fbfbfb;
   font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 
 .citas-cell {
-  min-height: 40px;
+  min-height: 60px;     /* antes 40px */
   border-left: 1px solid #f5f5f5;
   border-bottom: 1px solid #f5f5f5;
   position: relative;
-  padding: 2px;
+  padding: 4px;         /* un pelín más de padding */
   cursor: pointer;
 }
 
@@ -1342,4 +1349,14 @@ Citas*/
 .btn.ghost {
   background: transparent;
   border: 1px solid #ddd;
+}
+
+
+.citas-calendar {
+  width: 100%;
+  max-width: 100%;
+}
+
+.citas-grid {
+  grid-template-columns: 90px repeat(7, minmax(150px, 1fr));
 }
