@@ -10,6 +10,7 @@ const init = {
   direccion: "",
   sexo: "",
   patologias: "",
+  alergias:"",
   fecha_nacimiento: "",
   activo: true,
 };
@@ -38,6 +39,7 @@ export default function PacienteEditModal({
           direccion: p.direccion || "",
           sexo: p.sexo || "",
           patologias: p.patologias || "",
+          alergias: p.alergias || "",
           historia_clinica: p.historia_clinica || "",
           activo: !!p.activo,
         });
@@ -154,6 +156,18 @@ export default function PacienteEditModal({
               value={form.patologias}
               onChange={onChange}
             />
+            
+          </label>
+
+                    <label>
+            Alergias
+            <input
+              className="control"
+              name="alergias"
+              value={form.alergias}
+              onChange={onChange}
+            />
+            
           </label>
             <label>
             Historia Clínica

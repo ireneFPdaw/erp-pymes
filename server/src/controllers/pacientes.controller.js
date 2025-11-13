@@ -5,7 +5,7 @@ export async function listarPacientes(_req, res, next) {
   try {
     const { rows } = await query(
       `SELECT id, nombres, apellidos, dni, email, telefono, direccion,
-              sexo, patologias, fecha_nacimiento, activo,
+              sexo, patologias, fecha_nacimiento, activo,alergias,
               creada_en, actualizada_en
        FROM pacientes
        ORDER BY id ASC`
@@ -22,7 +22,7 @@ export async function obtenerPaciente(req, res, next) {
     const { id } = req.params;
     const { rows } = await query(
       `SELECT id, nombres, apellidos, dni, email, telefono, direccion,
-          sexo, patologias, historia_clinica, fecha_nacimiento,
+          sexo, patologias, historia_clinica, fecha_nacimiento,alergias,
           activo, creada_en, actualizada_en
      FROM pacientes
     WHERE id = $1`,
@@ -47,6 +47,7 @@ export async function crearPaciente(req, res, next) {
       direccion = null,
       sexo = null,
       patologias = null,
+      alergias = null,             // ← NUEVO
       historia_clinica = null,
       fecha_nacimiento = null,
       activo = true,
@@ -64,23 +65,24 @@ export async function crearPaciente(req, res, next) {
     const { rows } = await query(
       `INSERT INTO pacientes
          (nombres, apellidos, dni, email, telefono, direccion, sexo,
-          patologias, historia_clinica, fecha_nacimiento, activo)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+          patologias, alergias, historia_clinica, fecha_nacimiento, activo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING id, nombres, apellidos, dni, email, telefono, direccion,
-                 sexo, patologias, historia_clinica, fecha_nacimiento,
-                 activo, creada_en, actualizada_en`,
+                 sexo, patologias, alergias, historia_clinica,
+                 fecha_nacimiento, activo, creada_en, actualizada_en`,
       [
-        nombres.trim(),
-        apellidos.trim(),
-        dni.trim(),
-        email.trim(),
-        telefono,
-        direccion,
-        sexo,
-        patologias,
-        historia_clinica,
-        fecha_nacimiento === "" ? null : fecha_nacimiento,
-        Boolean(activo),
+        nombres.trim(),                                      // $1
+        apellidos.trim(),                                    // $2
+        dni.trim(),                                           // $3
+        email.trim(),                                         // $4
+        telefono,                                             // $5
+        direccion,                                            // $6
+        sexo,                                                 // $7
+        patologias,                                           // $8
+        alergias,                                             // $9 ← NUEVO
+        historia_clinica,                                     // $10
+        fecha_nacimiento === "" ? null : fecha_nacimiento,    // $11
+        Boolean(activo),                                      // $12
       ]
     );
 
@@ -91,6 +93,7 @@ export async function crearPaciente(req, res, next) {
     next(e);
   }
 }
+
 
 // PATCH /api/pacientes/:id
 export async function actualizarPaciente(req, res, next) {
@@ -105,6 +108,7 @@ export async function actualizarPaciente(req, res, next) {
       direccion = null,
       sexo = null,
       patologias = null,
+      alergias = null, // ← NUEVO
       historia_clinica = null,
       fecha_nacimiento = null,
       activo = true,
@@ -128,27 +132,30 @@ export async function actualizarPaciente(req, res, next) {
       direccion, // $6
       sexo, // $7
       patologias, // $8
-      historia_clinica, // $9   ← NUEVO
-      fecha_nacimiento === "" ? null : fecha_nacimiento, // $10
-      Boolean(activo), // $11
-      id, // $12
+      alergias, // $9 ← NUEVO
+      historia_clinica, // $10
+      fecha_nacimiento === "" ? null : fecha_nacimiento, // $11
+      Boolean(activo), // $12
+      id, // $13
     ];
 
     const { rows } = await query(
       `UPDATE pacientes
          SET nombres=$1, apellidos=$2, dni=$3, email=$4,
              telefono=$5, direccion=$6, sexo=$7, patologias=$8,
-             historia_clinica=$9,
-             fecha_nacimiento=$10, activo=$11, actualizada_en=now()
-       WHERE id=$12
+             alergias=$9,
+             historia_clinica=$10,
+             fecha_nacimiento=$11, activo=$12, actualizada_en=now()
+       WHERE id=$13
        RETURNING id, nombres, apellidos, dni, email, telefono, direccion,
-                 sexo, patologias, historia_clinica, fecha_nacimiento,
-                 activo, creada_en, actualizada_en`,
+                 sexo, patologias, alergias, historia_clinica,
+                 fecha_nacimiento, activo, creada_en, actualizada_en`,
       params
     );
 
     if (!rows.length)
       return res.status(404).json({ error: "Recurso no encontrado" });
+
     res.json(rows[0]);
   } catch (e) {
     if (e?.code === "23505")
