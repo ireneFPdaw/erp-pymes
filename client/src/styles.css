@@ -913,7 +913,7 @@ select:focus {
     background: #f1f5ff;
 }
 
-.menu-wrap { position: relative; z-index: 99999; }
+.menu-wrap { position: relative; }
 .menu {
     position: absolute;
     right: 0;
