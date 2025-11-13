@@ -149,3 +149,33 @@ export async function updatePaciente(id, payload) {
   }
   return res.json();
 }
+
+// ---- CITAS ----
+
+export function getCitas(params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  const path = `/citas${qs ? `?${qs}` : ""}`;
+  return http(path, { method: "GET" });
+}
+
+export function getCita(id) {
+  return http(`/citas/${id}`, { method: "GET" });
+}
+
+export function createCita(payload) {
+  return http("/citas", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateCita(id, payload) {
+  return http(`/citas/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteCita(id) {
+  return http(`/citas/${id}`, { method: "DELETE" });
+}

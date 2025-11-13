@@ -7,6 +7,7 @@ import TareaBoard from "./components/TareaBoard.jsx";
 import EmpleadosTable from "./components/EmpleadosTable.jsx";
 import PacientesTable from "./components/PacientesTable.jsx";
 import HistoriaClinica from "./pages/HistoriaClinica.jsx";  // 👈 crea este archivo si no lo tienes
+import CitasPage from "./pages/CitasPage.jsx";
 
 export default function App() {
   const [editando, setEditando] = useState(null);
@@ -47,7 +48,6 @@ export default function App() {
   // —— Rutas —— //
   return (
     <Routes>
-      {/* Home (tu app actual con tabs) */}
       <Route
         path="/"
         element={
@@ -85,13 +85,17 @@ export default function App() {
               </button>
             </nav>
 
-            {vista === "tablero" ? (
+            {vista === "tablero" && (
               <main className="main" role="main">
                 <section className="panel paper" aria-labelledby="form-title">
-                  <h2 id="form-title">{editando ? "Editar tarea" : "Nueva tarea"}</h2>
+                  <h2 id="form-title">
+                    {editando ? "Editar tarea" : "Nueva tarea"}
+                  </h2>
                   {mensaje && (
                     <p
-                      className={`msg ${mensaje.startsWith("✅") ? "ok" : "err"}`}
+                      className={`msg ${
+                        mensaje.startsWith("✅") ? "ok" : "err"
+                      }`}
                       role="status"
                     >
                       {mensaje}
@@ -104,11 +108,17 @@ export default function App() {
                   />
                 </section>
 
-                <section aria-labelledby="board-title" className="board-section">
+                <section
+                  aria-labelledby="board-title"
+                  className="board-section"
+                >
                   <h2 id="board-title" className="visually-hidden">
                     Tablero Kanban
                   </h2>
-                  <div className="board-wrap kanban" aria-label="Tablero Kanban">
+                  <div
+                    className="board-wrap kanban"
+                    aria-label="Tablero Kanban"
+                  >
                     <TareaBoard
                       onEdit={onEdit}
                       refreshKey={refreshKey}
@@ -122,20 +132,52 @@ export default function App() {
                   )}
                 </section>
               </main>
-            ) : (
+            )}
+
+            {vista === "empleados" && (
               <main
                 className="wrap-narrow"
-                style={{ maxWidth: "2200px", margin: "22px auto 46px", padding: "0 16px" }}
+                style={{
+                  maxWidth: "2200px",
+                  margin: "22px auto 46px",
+                  padding: "0 16px",
+                }}
               >
-                {vista === "empleados" ? <EmpleadosTable /> : <PacientesTable />}
+                <EmpleadosTable />
+              </main>
+            )}
+
+            {vista === "pacientes" && (
+              <main
+                className="wrap-narrow"
+                style={{
+                  maxWidth: "2200px",
+                  margin: "22px auto 46px",
+                  padding: "0 16px",
+                }}
+              >
+                <PacientesTable />
+              </main>
+            )}
+
+            {vista === "citas" && (
+              <main
+                className="wrap-narrow"
+                style={{
+                  maxWidth: "2200px",
+                  margin: "22px auto 46px",
+                  padding: "0 16px",
+                }}
+              >
+                <CitasPage />
               </main>
             )}
           </div>
         }
       />
 
-      {/* Historia clínica de un paciente */}
       <Route path="/pacientes/:id" element={<HistoriaClinica />} />
     </Routes>
   );
+
 }

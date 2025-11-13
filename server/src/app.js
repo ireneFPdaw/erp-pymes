@@ -1,15 +1,12 @@
-// server/src/app.js
 import "dotenv/config.js";
 import express from "express";
 import cors from "cors";
-
-// 🔹 Importa routers
 import tareasRouter from "./routes/tareas.routes.js";
 import empleadosRouter from "./routes/empleados.routes.js";
 import archivosEmpleadosRoutes from "./routes/archivos.routes.js"; // Archivos de empleados
 import pacientesRoutes from "./routes/pacientes.routes.js"; // CRUD de pacientes
 import archivosPacientesRoutes from "./routes/archivos.pacientes.routes.js"; // Archivos de pacientes
-
+import citasRoutes from "./routes/citas.routes.js"; 
 const app = express();
 
 // 🔹 Origen permitido (tu Vite)
@@ -45,6 +42,8 @@ app.use("/api/empleados", archivosEmpleadosRoutes); // rutas de archivos de empl
 // 🔸 Pacientes
 app.use("/api/pacientes", pacientesRoutes);
 app.use("/api/pacientes", archivosPacientesRoutes); // rutas de archivos de pacientes
+// 🔸 Citas
+app.use("/api/citas", citasRoutes);
 
 // ------------------------------------------------------------------
 // 🧱 RUTAS NO ENCONTRADAS (404)
