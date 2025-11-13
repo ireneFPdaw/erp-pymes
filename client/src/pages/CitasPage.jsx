@@ -10,6 +10,33 @@ import {
 import CitasCalendar from "../components/CitasCalendar.jsx";
 import CitaForm from "../components/CitaForm.jsx";
 
+// ---- Helpers para nombres y fecha bonita ----
+function getEmpleadoNombreById(id, empleados) {
+  const emp = empleados.find((e) => String(e.id) === String(id));
+  if (!emp) return "—";
+  return emp.nombres && emp.apellidos
+    ? `${emp.apellidos}, ${emp.nombres}`
+    : emp.nombre || `Empleado ${emp.id}`;
+}
+
+function getPacienteNombreById(id, pacientes) {
+  const pac = pacientes.find((p) => String(p.id) === String(id));
+  if (!pac) return "—";
+  return pac.nombres && pac.apellidos
+    ? `${pac.apellidos}, ${pac.nombres}`
+    : pac.nombre || `Paciente ${pac.id}`;
+}
+
+function formatFechaBonita(fecha) {
+  if (!fecha) return "";
+  return new Date(fecha).toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function CitasPage() {
   const [empleados, setEmpleados] = useState([]);
   const [pacientes, setPacientes] = useState([]);
@@ -19,6 +46,7 @@ export default function CitasPage() {
   const [seleccionada, setSeleccionada] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [citaAEliminar, setCitaAEliminar] = useState(null);
 
   // cargar empleados y pacientes
   useEffect(() => {
@@ -39,7 +67,7 @@ export default function CitasPage() {
       .finally(() => setCargando(false));
   }, [rango, empleadoId]);
 
-  // por si quieres mantener useMemo, pero ahora sin filtrar por rol:
+  // todos los empleados
   const profesionales = useMemo(() => empleados, [empleados]);
 
   async function handleSubmit(cita) {
@@ -53,7 +81,7 @@ export default function CitasPage() {
         setMensaje("✅ Cita creada");
       }
       setSeleccionada(null);
-      // recargar
+      // recargar citas
       const params = { from: rango.from, to: rango.to };
       if (empleadoId !== "all") params.empleadoId = empleadoId;
       const data = await getCitas(params);
@@ -65,7 +93,6 @@ export default function CitasPage() {
 
   async function handleDelete(id) {
     try {
-      if (!window.confirm("¿Eliminar esta cita?")) return;
       await deleteCita(id);
       setMensaje("✅ Cita eliminada");
       const params = { from: rango.from, to: rango.to };
@@ -99,7 +126,6 @@ export default function CitasPage() {
               <option value="all">Todos</option>
               {profesionales.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {/* ajusta aquí según tu modelo: */}
                   {e.nombres && e.apellidos
                     ? `${e.nombres} ${e.apellidos}`
                     : e.nombre || `Empleado ${e.id}`}
@@ -121,8 +147,8 @@ export default function CitasPage() {
 
       <CitasCalendar
         citas={citas}
-        empleados={profesionales} // usamos todos los empleados
-        empleadoFiltro={empleadoId} // aquí sí filtramos por persona
+        empleados={profesionales}
+        empleadoFiltro={empleadoId}
         onRangeChange={setRango}
         onSelectCita={setSeleccionada}
         onCreateCita={(slot) =>
@@ -146,10 +172,82 @@ export default function CitasPage() {
           pacientes={pacientes}
           onSubmit={handleSubmit}
           onDelete={
-            seleccionada.id ? () => handleDelete(seleccionada.id) : null
+            seleccionada.id ? () => setCitaAEliminar(seleccionada) : null
           }
           onClose={() => setSeleccionada(null)}
         />
+      )}
+
+      {/* Popup de confirmación de borrado */}
+      {citaAEliminar && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setCitaAEliminar(null)}
+        >
+          <div
+            className="modal modal-confirm"
+            onClick={(e) => e.stopPropagation()}
+            aria-modal="true"
+            role="dialog"
+          >
+            <header className="modal-header">
+              <h3>Eliminar cita</h3>
+              <button
+                className="icon-btn"
+                onClick={() => setCitaAEliminar(null)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <p>¿Seguro que quieres eliminar esta cita?</p>
+
+              <p className="muted" style={{ marginTop: 8 }}>
+                <strong>{formatFechaBonita(citaAEliminar.fecha)}</strong> ·{" "}
+                {citaAEliminar.horaInicio}–{citaAEliminar.horaFin}
+              </p>
+
+              <p className="muted" style={{ marginTop: 8 }}>
+                Profesional:{" "}
+                <strong>
+                  {getEmpleadoNombreById(
+                    citaAEliminar.empleadoId,
+                    profesionales
+                  )}
+                </strong>
+                <br />
+                Paciente:{" "}
+                <strong>
+                  {getPacienteNombreById(
+                    citaAEliminar.pacienteId,
+                    pacientes
+                  )}
+                </strong>
+              </p>
+            </div>
+
+            <footer className="modal-footer">
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={() => setCitaAEliminar(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn danger"
+                onClick={() => {
+                  handleDelete(citaAEliminar.id);
+                  setCitaAEliminar(null);
+                }}
+              >
+                Eliminar
+              </button>
+            </footer>
+          </div>
+        </div>
       )}
     </div>
   );
