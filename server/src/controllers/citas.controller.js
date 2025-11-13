@@ -2,7 +2,6 @@
 import { query } from "../db.js";
 
 // ---- LISTAR CITAS ----
-// GET /api/citas?from=YYYY-MM-DD&to=YYYY-MM-DD&empleadoId=&pacienteId=
 export async function listarCitas(req, res, next) {
   try {
     const { from, to, empleadoId, pacienteId } = req.query;
@@ -15,9 +14,9 @@ export async function listarCitas(req, res, next) {
         id,
         empleadoid AS "empleadoId",
         pacienteid AS "pacienteId",
-        fecha,
-        horainicio AS "horaInicio",
-        horafin AS "horaFin",
+        to_char(fecha, 'YYYY-MM-DD')     AS "fecha",
+        to_char(horainicio, 'HH24:MI')   AS "horaInicio",
+        to_char(horafin, 'HH24:MI')      AS "horaFin",
         tipo,
         estado,
         sala,
@@ -58,9 +57,9 @@ export async function obtenerCita(req, res, next) {
         id,
         empleadoid AS "empleadoId",
         pacienteid AS "pacienteId",
-        fecha,
-        horainicio AS "horaInicio",
-        horafin AS "horaFin",
+        to_char(fecha, 'YYYY-MM-DD')     AS "fecha",
+        to_char(horainicio, 'HH24:MI')   AS "horaInicio",
+        to_char(horafin, 'HH24:MI')      AS "horaFin",
         tipo,
         estado,
         sala,
@@ -116,23 +115,23 @@ export async function crearCita(req, res, next) {
 
     const result = await query(
       `
-      INSERT INTO public.citas
-        (empleadoid, pacienteid, fecha, horainicio, horafin,
-         tipo, estado, sala, notas)
-      VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING
-        id,
-        empleadoid AS "empleadoId",
-        pacienteid AS "pacienteId",
-        fecha,
-        horainicio AS "horaInicio",
-        horafin AS "horaFin",
-        tipo,
-        estado,
-        sala,
-        notas
-    `,
+  INSERT INTO public.citas
+    (empleadoid, pacienteid, fecha, horainicio, horafin,
+     tipo, estado, sala, notas)
+  VALUES
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  RETURNING
+    id,
+    empleadoid AS "empleadoId",
+    pacienteid AS "pacienteId",
+    to_char(fecha, 'YYYY-MM-DD')     AS "fecha",
+    to_char(horainicio, 'HH24:MI')   AS "horaInicio",
+    to_char(horafin, 'HH24:MI')      AS "horaFin",
+    tipo,
+    estado,
+    sala,
+    notas
+`,
       [
         Number(empleadoId),
         Number(pacienteId),
@@ -258,21 +257,21 @@ export async function actualizarCita(req, res, next) {
 
     valores.push(Number(id));
     const sql = `
-      UPDATE public.citas
-      SET ${campos.join(", ")}
-      WHERE id = $${idx}
-      RETURNING
-        id,
-        empleadoid AS "empleadoId",
-        pacienteid AS "pacienteId",
-        fecha,
-        horainicio AS "horaInicio",
-        horafin AS "horaFin",
-        tipo,
-        estado,
-        sala,
-        notas
-    `;
+  UPDATE public.citas
+  SET ${campos.join(", ")}
+  WHERE id = $${idx}
+  RETURNING
+    id,
+    empleadoid AS "empleadoId",
+    pacienteid AS "pacienteId",
+    to_char(fecha, 'YYYY-MM-DD')     AS "fecha",
+    to_char(horainicio, 'HH24:MI')   AS "horaInicio",
+    to_char(horafin, 'HH24:MI')      AS "horaFin",
+    tipo,
+    estado,
+    sala,
+    notas
+`;
 
     const result = await query(sql, valores);
     res.json(result.rows[0]);
