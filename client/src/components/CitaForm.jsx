@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const ESTADOS = ["programada", "realizada", "cancelada", "no_acude"];
+const ESTADOS = ["programada", "realizada", "cancelada", "no acude"];
 
 export default function CitaForm({
   cita,
@@ -76,7 +76,10 @@ export default function CitaForm({
                 <option value="">Selecciona profesional</option>
                 {empleados.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.nombre}
+                    {/* usa nombres/apellidos de tu tabla */}
+                    {e.nombres && e.apellidos
+                      ? `${e.apellidos}, ${e.nombres}`
+                      : e.nombre || `Empleado ${e.id}`}
                   </option>
                 ))}
               </select>
@@ -93,7 +96,9 @@ export default function CitaForm({
                 <option value="">Selecciona paciente</option>
                 {pacientes.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.nombre}
+                    {p.nombres && p.apellidos
+                      ? `${p.apellidos}, ${p.nombres}`
+                      : p.nombre || `Paciente ${p.id}`}
                   </option>
                 ))}
               </select>

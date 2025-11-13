@@ -39,15 +39,8 @@ export default function CitasPage() {
       .finally(() => setCargando(false));
   }, [rango, empleadoId]);
 
-  const profesionales = useMemo(
-    () =>
-      empleados.filter((e) =>
-        ["fisioterapeuta", "gerente", "secretario"].includes(
-          (e.rol || "").toLowerCase()
-        )
-      ),
-    [empleados]
-  );
+  // por si quieres mantener useMemo, pero ahora sin filtrar por rol:
+  const profesionales = useMemo(() => empleados, [empleados]);
 
   async function handleSubmit(cita) {
     try {
@@ -106,7 +99,10 @@ export default function CitasPage() {
               <option value="all">Todos</option>
               {profesionales.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.nombre}
+                  {/* ajusta aquí según tu modelo: */}
+                  {e.nombres && e.apellidos
+                    ? `${e.nombres} ${e.apellidos}`
+                    : e.nombre || `Empleado ${e.id}`}
                 </option>
               ))}
             </select>
@@ -125,8 +121,8 @@ export default function CitasPage() {
 
       <CitasCalendar
         citas={citas}
-        empleados={profesionales}
-        empleadoFiltro={empleadoId}
+        empleados={profesionales}        // usamos todos los empleados
+        empleadoFiltro={empleadoId}      // aquí sí filtramos por persona
         onRangeChange={setRango}
         onSelectCita={setSeleccionada}
         onCreateCita={(slot) =>
