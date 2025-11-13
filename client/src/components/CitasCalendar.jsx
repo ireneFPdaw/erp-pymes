@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-
+import { SALAS_COLORS } from "../constants/salas";
 const HOURS = Array.from({ length: 13 }, (_, i) => 8 + i); // 8:00–20:00
 
 function toISODate(d) {
@@ -64,7 +64,12 @@ export default function CitasCalendar({
   }
 
   function getEmpleadoNombre(id) {
-    return empleados.find((e) => e.id === id)?.nombre || "";
+    const emp = empleados.find((e) => e.id === id);
+    if (!emp) return "";
+    if (emp.nombres && emp.apellidos) {
+      return `${emp.apellidos}, ${emp.nombres}`;
+    }
+    return emp.nombre || `Empleado ${emp.id}`;
   }
 
   return (
@@ -91,6 +96,38 @@ export default function CitasCalendar({
         </button>
       </div>
 
+      {/* Leyenda de salas */}
+      <div className="salas-legend">
+        <div>
+          <span
+            className="legend-color"
+            style={{ background: SALAS_COLORS.F1 }}
+          />
+          Sala F1
+        </div>
+        <div>
+          <span
+            className="legend-color"
+            style={{ background: SALAS_COLORS.F2 }}
+          />
+          Sala F2
+        </div>
+        <div>
+          <span
+            className="legend-color"
+            style={{ background: SALAS_COLORS.F3 }}
+          />
+          Sala F3
+        </div>
+        <div>
+          <span
+            className="legend-color"
+            style={{ background: SALAS_COLORS.DESPACHO }}
+          />
+          Despacho
+        </div>
+      </div>
+
       <div className="citas-grid">
         {/* cabecera días */}
         <div className="citas-grid-header hour-col" />
@@ -111,9 +148,7 @@ export default function CitasCalendar({
         {/* columnas de horas x días */}
         {HOURS.map((h) => (
           <React.Fragment key={h}>
-            <div className="hour-col">
-              {String(h).padStart(2, "0")}:00
-            </div>
+            <div className="hour-col">{String(h).padStart(2, "0")}:00</div>
             {days.map((d) => {
               const fecha = toISODate(d);
               const horaStr = `${String(h).padStart(2, "0")}:00`;
@@ -147,17 +182,23 @@ export default function CitasCalendar({
                       key={c.id}
                       className="cita-chip"
                       type="button"
+                      style={{
+                        background:
+                          SALAS_COLORS[c.sala] || SALAS_COLORS.DEFAULT,
+                      }}
                       onClick={() => onSelectCita?.(c)}
                     >
                       <span className="cita-chip-hora">
-                        {normalizeTime(c.horaInicio)}-
-                        {normalizeTime(c.horaFin)}
+                        {normalizeTime(c.horaInicio)}-{normalizeTime(c.horaFin)}
                       </span>
                       <span className="cita-chip-txt">
                         {getEmpleadoNombre(c.empleadoId)}
                       </span>
                       {c.tipo && (
                         <span className="cita-chip-tipo">{c.tipo}</span>
+                      )}
+                      {c.sala && (
+                        <span className="cita-chip-sala">({c.sala})</span>
                       )}
                     </button>
                   ))}

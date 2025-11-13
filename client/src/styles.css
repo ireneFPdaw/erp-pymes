@@ -1439,3 +1439,24 @@ Citas*/
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
+.salas-legend {
+  display: flex;
+  gap: 1.2rem;
+  margin: 10px 0 15px;
+  font-size: 0.9rem;
+  align-items: center;
+}
+
+.salas-legend div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #ccc;
+}
