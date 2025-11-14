@@ -11,7 +11,7 @@ export default function Avatar({ id, nombres = "", apellidos = "", visible }) {
 
   const iniciales = `${nombres[0] || ""}${apellidos?.[0] || ""}`.toUpperCase();
   const src = `${API}/api/empleados/${id}/foto`;
-  const showImage = visible && !error; // <- decide render, pero hooks arriba
+  const showImage = visible && !error;
 
   function placePreview() {
     if (!wrapperRef.current) return;
@@ -21,10 +21,8 @@ export default function Avatar({ id, nombres = "", apellidos = "", visible }) {
     let left = r.right + GAP;
     let top  = r.top + r.height / 2 - H / 2;
 
-    // Clamp vertical
     top = Math.max(MARGIN, Math.min(window.innerHeight - H - MARGIN, top));
 
-    // Si no entra a la derecha, colócalo a la izquierda
     if (left + W + MARGIN > window.innerWidth) {
       left = r.left - GAP - W;
     }
@@ -33,7 +31,7 @@ export default function Avatar({ id, nombres = "", apellidos = "", visible }) {
   }
 
   useEffect(() => {
-    // ejecuta SIEMPRE el hook; activa listeners sólo en hover + con imagen
+
     if (!hover || !showImage) return;
 
     const onScroll = () => placePreview();
@@ -47,8 +45,8 @@ export default function Avatar({ id, nombres = "", apellidos = "", visible }) {
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onResize);
     };
-  }, [hover, showImage]); // deps claras
-
+  }, [hover, showImage]);
+  
   // ---------- Render ----------
   if (!showImage) {
     return (

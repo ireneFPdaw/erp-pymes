@@ -179,3 +179,27 @@ export function updateCita(id, payload) {
 export function deleteCita(id) {
   return http(`/citas/${id}`, { method: "DELETE" });
 }
+export async function getDisponibilidadEmpleado(empleadoId) {
+  return http(`/empleados/${empleadoId}/disponibilidad`, { method: "GET" });
+}
+
+export async function saveDisponibilidadEmpleado(empleadoId, bloques) {
+  return http(`/empleados/${empleadoId}/disponibilidad`, {
+    method: "PUT",
+    body: JSON.stringify({ bloques }),
+  });
+}
+export async function getDisponibilidadExcepciones(empleadoId, params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  const path = `/empleados/${empleadoId}/disponibilidad-excepciones${
+    qs ? `?${qs}` : ""
+  }`;
+  return http(path, { method: "GET" });
+}
+
+export async function saveDisponibilidadExcepciones(empleadoId, payload) {
+  return http(`/empleados/${empleadoId}/disponibilidad-excepciones`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}

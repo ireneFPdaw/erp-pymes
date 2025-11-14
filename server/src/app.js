@@ -6,7 +6,12 @@ import empleadosRouter from "./routes/empleados.routes.js";
 import archivosEmpleadosRoutes from "./routes/archivos.routes.js"; // Archivos de empleados
 import pacientesRoutes from "./routes/pacientes.routes.js"; // CRUD de pacientes
 import archivosPacientesRoutes from "./routes/archivos.pacientes.routes.js"; // Archivos de pacientes
-import citasRoutes from "./routes/citas.routes.js"; 
+import citasRoutes from "./routes/citas.routes.js";
+import disponibilidadesRoutes from "./routes/disponibilidades.routes.js";
+import disponibilidadExcepcionesRoutes from "./routes/disponibilidadExcepciones.routes.js";
+
+// ...
+
 const app = express();
 
 // 🔹 Origen permitido (tu Vite)
@@ -45,6 +50,9 @@ app.use("/api/pacientes", archivosPacientesRoutes); // rutas de archivos de paci
 // 🔸 Citas
 app.use("/api/citas", citasRoutes);
 
+// 🔸 disponibilidades,
+app.use("/api", disponibilidadesRoutes);
+app.use("/api", disponibilidadExcepcionesRoutes);
 // ------------------------------------------------------------------
 // 🧱 RUTAS NO ENCONTRADAS (404)
 // ------------------------------------------------------------------

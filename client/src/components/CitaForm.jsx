@@ -13,7 +13,7 @@ export default function CitaForm({
   cita,
   empleados,
   pacientes,
-  error, // 👈 NUEVO
+  error,
   onSubmit,
   onDelete,
   onClose,

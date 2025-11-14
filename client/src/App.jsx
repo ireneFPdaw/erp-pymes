@@ -1,12 +1,11 @@
-// src/App.jsx
 import React, { useState } from "react";
-import { Routes, Route } from "react-router-dom";           // 👈
+import { Routes, Route } from "react-router-dom";
 import { createTarea, getTarea, updateTarea } from "./services/api.js";
 import TareaForm from "./components/TareaForm.jsx";
 import TareaBoard from "./components/TareaBoard.jsx";
 import EmpleadosTable from "./components/EmpleadosTable.jsx";
 import PacientesTable from "./components/PacientesTable.jsx";
-import HistoriaClinica from "./pages/HistoriaClinica.jsx";  // 👈 crea este archivo si no lo tienes
+import HistoriaClinica from "./pages/HistoriaClinica.jsx";
 import CitasPage from "./pages/CitasPage.jsx";
 
 export default function App() {
@@ -14,7 +13,7 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
-  const [vista, setVista] = useState("tablero"); // 'tablero' | 'empleados' | 'pacientes'
+  const [vista, setVista] = useState("tablero");
 
   async function onSubmit(form) {
     try {
@@ -45,7 +44,6 @@ export default function App() {
     }
   }
 
-  // —— Rutas —— //
   return (
     <Routes>
       <Route

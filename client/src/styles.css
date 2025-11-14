@@ -1173,15 +1173,32 @@ Citas*/
 .citas-header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-end;
-  margin-bottom: 1rem;
+  align-items: flex-start;
 }
 
-.citas-filtros select {
-  margin-left: 0.5rem;
+.citas-filtros {
+  display: flex;
+  align-items: center;   /* ⭐ alinea select + botón en la misma línea */
+  gap: 0.75rem;
 }
 
+.citas-filtro-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.citas-filtro-label select {
+  margin: 0;
+}
+
+.citas-filtro-btn {
+  /* opcional, si quieres que el alto sea similar al select */
+  display: flex;
+  align-items: center;
+  padding-inline: 14px;
+}
 /* Calendario */
 
 .citas-calendar {
@@ -1295,7 +1312,7 @@ Citas*/
 .modal {
   background: #fff;
   border-radius: 18px;
-  max-width: 640px;
+  
   width: 100%;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
   max-height: 90vh;
@@ -1459,4 +1476,148 @@ Citas*/
   border-radius: 4px;
   display: inline-block;
   border: 1px solid #ccc;
+}
+.citas-cell-bloqueada {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.citas-cell-bloqueada:hover {
+  background: #e5e7eb;
+}
+
+
+
+/* Lista vertical de días */
+.disp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+/* Una fila por día: "Lunes  [hora] a [hora]  Limpiar" */
+.disp-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Columna del nombre del día */
+.disp-day {
+  width: 120px;
+  font-weight: 600;
+}
+
+/* Contenedor de horas en línea */
+.disp-times {
+  display: flex;
+  flex-wrap: nowrap;          /* 👈 para que no salten de línea */
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Evitar que los <input> ocupen 100% del ancho */
+.disp-times input[type="time"] {
+  width: 110px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f9fafb;
+}
+
+/* “a” entre horas */
+.disp-separador {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* Botón texto para limpiar un día */
+.link-btn {
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+
+/* Toolbar semana dentro del modal */
+.disp-week-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #f3f4ff;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.disp-week-title {
+  font-weight: 600;
+}
+
+/* Variante pequeña del botón ghost */
+.btn.ghost.sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* Lista vertical de días */
+.disp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.disp-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.disp-day {
+  width: 120px;
+  font-weight: 600;
+}
+
+.disp-times {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.disp-times input[type="time"] {
+  width: 110px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f9fafb;
+}
+
+.disp-separador {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
 }

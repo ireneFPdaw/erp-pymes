@@ -2,6 +2,56 @@
 import { query } from "../db.js";
 const SALAS_FISIO = ["F1", "F2", "F3"];
 const SALA_DESPACHO = "DESPACHO";
+
+async function tieneDisponibilidadProfesional(empleadoId, fecha, horaInicio, horaFin) {
+  // 1) Mirar si hay excepciones para ese día concreto
+  const excRes = await query(
+    `
+    SELECT cerrado, hora_inicio, hora_fin
+    FROM disponibilidades_excepciones
+    WHERE empleado_id = $1
+      AND fecha = $2
+    `,
+    [Number(empleadoId), fecha]
+  );
+
+  if (excRes.rowCount > 0) {
+    const rows = excRes.rows;
+
+    // Si hay un registro cerrado = true => día no laborable
+    if (rows.some((r) => r.cerrado)) {
+      return false;
+    }
+
+    // Si hay bloques especiales, solo se permite dentro de ellos
+    const ok = rows.some(
+      (r) =>
+        r.hora_inicio <= horaInicio &&
+        r.hora_fin >= horaFin
+    );
+
+    return ok;
+  }
+
+  // 2) Si no hay excepciones, usamos la plantilla semanal
+  const jsDay = new Date(fecha).getDay(); // 0 domingo ... 6 sábado
+  const diaSemana = jsDay === 0 ? 7 : jsDay; // 1 lunes ... 7 domingo
+
+  const dispResult = await query(
+    `
+    SELECT 1
+    FROM disponibilidades
+    WHERE empleado_id = $1
+      AND dia_semana = $2
+      AND activo = TRUE
+      AND hora_inicio <= $3
+      AND hora_fin    >= $4
+    `,
+    [Number(empleadoId), diaSemana, horaInicio, horaFin]
+  );
+
+  return dispResult.rowCount > 0;
+}
 // ---- LISTAR CITAS ----
 export async function listarCitas(req, res, next) {
   try {
@@ -98,27 +148,42 @@ export async function crearCita(req, res, next) {
 
     const salaFinal = sala || null;
 
-    // Validar tipo/sala
+    // 1) Validar tipo/sala
     if (tipo === "sesion" && salaFinal && !SALAS_FISIO.includes(salaFinal)) {
       return res.status(400).json({
         error: "Las sesiones deben reservar una sala de fisio (F1, F2 o F3).",
       });
     }
     if (tipo !== "sesion" && salaFinal && salaFinal !== SALA_DESPACHO) {
-      return res
-        .status(400)
-        .json({ error: "Las citas no clínicas deben usar la sala DESPACHO." });
+      return res.status(400).json({
+        error: "Las citas no clínicas deben usar la sala DESPACHO.",
+      });
     }
 
-    // Comprobación de solapamiento para el mismo profesional
+    // 2) Validar DISPONIBILIDAD del profesional
+    // fecha viene como "YYYY-MM-DD"
+  const disponible = await tieneDisponibilidadProfesional(
+      empleadoId,
+      fecha,
+      horaInicio,
+      horaFin
+    );
+
+    if (!disponible) {
+      return res.status(400).json({
+        error: "El profesional no tiene disponibilidad en ese horario.",
+      });
+    }
+
+    // 3) Comprobación de solapamiento para el mismo profesional
     const conflictoProfesional = await query(
       `
-  SELECT 1
-  FROM public.citas
-  WHERE empleadoid = $1
-    AND fecha = $2
-    AND (horainicio < $4 AND horafin > $3)
-`,
+      SELECT 1
+      FROM public.citas
+      WHERE empleadoid = $1
+        AND fecha = $2
+        AND (horainicio < $4 AND horafin > $3)
+    `,
       [Number(empleadoId), fecha, horaInicio, horaFin]
     );
 
@@ -128,15 +193,16 @@ export async function crearCita(req, res, next) {
       });
     }
 
+    // 4) Comprobación de solapamiento para la misma sala
     if (salaFinal) {
       const conflictoSala = await query(
         `
-    SELECT 1
-    FROM public.citas
-    WHERE fecha = $1
-      AND sala = $2
-      AND (horainicio < $4 AND horafin > $3)
-  `,
+        SELECT 1
+        FROM public.citas
+        WHERE fecha = $1
+          AND sala = $2
+          AND (horainicio < $4 AND horafin > $3)
+      `,
         [fecha, salaFinal, horaInicio, horaFin]
       );
 
@@ -147,15 +213,16 @@ export async function crearCita(req, res, next) {
       }
     }
 
+    // 5) Comprobación de solapamiento para el mismo paciente
     if (pacienteId) {
       const conflictoPaciente = await query(
         `
-    SELECT 1
-    FROM public.citas
-    WHERE pacienteid = $1
-      AND fecha = $2
-      AND (horainicio < $4 AND horafin > $3)
-  `,
+        SELECT 1
+        FROM public.citas
+        WHERE pacienteid = $1
+          AND fecha = $2
+          AND (horainicio < $4 AND horafin > $3)
+      `,
         [Number(pacienteId), fecha, horaInicio, horaFin]
       );
 
@@ -165,6 +232,8 @@ export async function crearCita(req, res, next) {
         });
       }
     }
+
+    // 6) Insertar cita
     const result = await query(
       `
       INSERT INTO public.citas
@@ -238,7 +307,19 @@ export async function actualizarCita(req, res, next) {
     const horaFinFinal = horaFin ?? actual.horafin;
     const tipoFinal = tipo ?? actual.tipo;
     const salaFinal = sala ?? actual.sala;
+   // 1bis) Validar disponibilidad del profesional con los nuevos datos
+    const disponible = await tieneDisponibilidadProfesional(
+      empleadoFinal,
+      fechaFinal,
+      horaInicioFinal,
+      horaFinFinal
+    );
 
+    if (!disponible) {
+      return res.status(400).json({
+        error: "El profesional no tiene disponibilidad en ese horario.",
+      });
+    }
     // 2) Validar coherencia tipo/sala
     if (
       tipoFinal === "sesion" &&

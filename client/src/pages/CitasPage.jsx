@@ -1,3 +1,4 @@
+// client/src/pages/CitasPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   getCitas,
@@ -6,9 +7,11 @@ import {
   deleteCita,
   getEmpleados,
   getPacientes,
+  getDisponibilidadEmpleado,
 } from "../services/api.js";
 import CitasCalendar from "../components/CitasCalendar.jsx";
 import CitaForm from "../components/CitaForm.jsx";
+import DisponibilidadModal from "../components/DisponibilidadModal.jsx";
 
 // ---- Helpers para nombres y fecha bonita ----
 function getEmpleadoNombreById(id, empleados) {
@@ -40,7 +43,7 @@ function formatFechaBonita(fecha) {
 export default function CitasPage() {
   const [empleados, setEmpleados] = useState([]);
   const [pacientes, setPacientes] = useState([]);
-  const [empleadoId, setEmpleadoId] = useState("all");
+  const [empleadoId, setEmpleadoId] = useState("all"); // filtro del calendario
   const [citas, setCitas] = useState([]);
   const [rango, setRango] = useState({ from: "", to: "" });
   const [seleccionada, setSeleccionada] = useState(null);
@@ -48,6 +51,8 @@ export default function CitasPage() {
   const [cargando, setCargando] = useState(false);
   const [citaAEliminar, setCitaAEliminar] = useState(null);
   const [formError, setFormError] = useState("");
+  const [disponibilidad, setDisponibilidad] = useState([]);
+  const [editandoDisponibilidad, setEditandoDisponibilidad] = useState(false);
 
   // cargar empleados y pacientes
   useEffect(() => {
@@ -55,7 +60,7 @@ export default function CitasPage() {
     getPacientes().then(setPacientes).catch(console.error);
   }, []);
 
-  // cargar citas cuando cambia rango o empleado
+  // cargar citas cuando cambia rango o empleado (filtro calendario)
   useEffect(() => {
     if (!rango.from || !rango.to) return;
     setCargando(true);
@@ -67,6 +72,17 @@ export default function CitasPage() {
       .catch((err) => setMensaje("❌ " + err.message))
       .finally(() => setCargando(false));
   }, [rango, empleadoId]);
+
+  // cargar disponibilidad para el profesional seleccionado (para pintar el calendario)
+  useEffect(() => {
+    if (empleadoId === "all") {
+      setDisponibilidad([]);
+      return;
+    }
+    getDisponibilidadEmpleado(empleadoId)
+      .then(setDisponibilidad)
+      .catch((err) => console.error(err));
+  }, [empleadoId]);
 
   // todos los empleados
   const profesionales = useMemo(() => empleados, [empleados]);
@@ -113,34 +129,43 @@ export default function CitasPage() {
 
   return (
     <div className="paper citas-page">
-      <header className="citas-header">
-        <div className="citas-header-main">
-          <h2>Citas</h2>
-          <p className="muted">
-            Vista semanal de las agendas de fisioterapeutas, gerentes y
-            secretaría.
-          </p>
-        </div>
+<header className="citas-header">
+  <div className="citas-header-main">
+    <h2>Citas</h2>
+    <p className="muted">
+      Vista semanal de las agendas de fisioterapeutas, gerentes y
+      secretaría.
+    </p>
+  </div>
 
-        <div className="citas-filtros">
-          <label>
-            Profesional:
-            <select
-              value={empleadoId}
-              onChange={(e) => setEmpleadoId(e.target.value)}
-            >
-              <option value="all">Todos</option>
-              {profesionales.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nombres && e.apellidos
-                    ? `${e.nombres} ${e.apellidos}`
-                    : e.nombre || `Empleado ${e.id}`}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </header>
+  <div className="citas-filtros">
+    <label className="citas-filtro-label">
+      <span>Profesional:</span>
+      <select
+        value={empleadoId}
+        onChange={(e) => setEmpleadoId(e.target.value)}
+      >
+        <option value="all">Todos</option>
+        {profesionales.map((e) => (
+          <option key={e.id} value={e.id}>
+            {e.nombres && e.apellidos
+              ? `${e.nombres} ${e.apellidos}`
+              : e.nombre || `Empleado ${e.id}`}
+          </option>
+        ))}
+      </select>
+    </label>
+
+    <button
+      type="button"
+      className="btn ghost citas-filtro-btn"
+      onClick={() => setEditandoDisponibilidad(true)}
+    >
+      Disponibilidad
+    </button>
+  </div>
+</header>
+
 
       {mensaje && (
         <p
@@ -155,6 +180,7 @@ export default function CitasPage() {
         citas={citas}
         empleados={profesionales}
         empleadoFiltro={empleadoId}
+        disponibilidad={disponibilidad}
         onRangeChange={setRango}
         onSelectCita={setSeleccionada}
         onCreateCita={(slot) =>
@@ -184,6 +210,19 @@ export default function CitasPage() {
           onClose={() => {
             setFormError("");
             setSeleccionada(null);
+          }}
+        />
+      )}
+      {editandoDisponibilidad && (
+        <DisponibilidadModal
+          profesionales={profesionales}
+          empleadoIdInicial={empleadoId !== "all" ? String(empleadoId) : null}
+          semanaRango={rango} // 👈 Asegúrate de tener esto
+          onClose={() => setEditandoDisponibilidad(false)}
+          onSaved={(empleadoIdGuardado, bloquesActualizados) => {
+            setEmpleadoId(String(empleadoIdGuardado));
+            setDisponibilidad(bloquesActualizados);
+            setEditandoDisponibilidad(false);
           }}
         />
       )}
